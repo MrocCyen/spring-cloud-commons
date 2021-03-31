@@ -42,17 +42,23 @@ import org.springframework.stereotype.Component;
 @ManagedResource
 public class EnvironmentManager implements ApplicationEventPublisherAware {
 
+	//环境中properties的名称
 	private static final String MANAGER_PROPERTY_SOURCE = "manager";
 
+	//用于存储当前环境中变化的值，存储在名为MANAGER_PROPERTY_SOURCE对应的MapPropertySource中
 	private Map<String, Object> map = new LinkedHashMap<String, Object>();
 
+	//当前环境
 	private ConfigurableEnvironment environment;
 
+	//事件发布者
 	private ApplicationEventPublisher publisher;
 
 	public EnvironmentManager(ConfigurableEnvironment environment) {
 		this.environment = environment;
 		MutablePropertySources sources = environment.getPropertySources();
+		//首先判断是否存在名为MANAGER_PROPERTY_SOURCE的PropertySource
+		//有的话则获取其中的值，并赋值给map变量
 		if (sources.contains(MANAGER_PROPERTY_SOURCE)) {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> map = (Map<String, Object>) sources.get(MANAGER_PROPERTY_SOURCE).getSource();
@@ -65,6 +71,12 @@ public class EnvironmentManager implements ApplicationEventPublisherAware {
 		this.publisher = publisher;
 	}
 
+	/**
+	 * 重置当前EnvironmentManager中缓存的map类型的变量值
+	 * 发布环境事件变化事件
+	 * 返回重置的map类型的变量值
+	 * @return
+	 */
 	@ManagedOperation
 	public Map<String, Object> reset() {
 		Map<String, Object> result = new LinkedHashMap<String, Object>(this.map);
