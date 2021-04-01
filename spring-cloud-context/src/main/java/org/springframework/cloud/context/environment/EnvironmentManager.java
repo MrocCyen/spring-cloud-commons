@@ -89,7 +89,8 @@ public class EnvironmentManager implements ApplicationEventPublisherAware {
 
 	@ManagedOperation
 	public void setProperty(String name, String value) {
-
+		//首先判断是否存在名为MANAGER_PROPERTY_SOURCE的PropertySource
+		//有的话则获取其中的值，并赋值给map变量
 		if (!this.environment.getPropertySources().contains(MANAGER_PROPERTY_SOURCE)) {
 			synchronized (this.map) {
 				if (!this.environment.getPropertySources().contains(MANAGER_PROPERTY_SOURCE)) {
@@ -99,6 +100,7 @@ public class EnvironmentManager implements ApplicationEventPublisherAware {
 			}
 		}
 
+		//环境中没有当前name对应的值，则添加值map中，并发布事件
 		if (!value.equals(this.environment.getProperty(name))) {
 			this.map.put(name, value);
 			publish(new EnvironmentChangeEvent(this.publisher, Collections.singleton(name)));
