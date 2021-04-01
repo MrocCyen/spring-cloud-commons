@@ -34,7 +34,6 @@ import org.springframework.boot.actuate.env.EnvironmentEndpointWebExtension;
 @EndpointWebExtension(endpoint = WritableEnvironmentEndpoint.class)
 public class WritableEnvironmentEndpointWebExtension extends EnvironmentEndpointWebExtension {
 
-	//真正管理环境的作者
 	private EnvironmentManager environment;
 
 	public WritableEnvironmentEndpointWebExtension(WritableEnvironmentEndpoint endpoint,
