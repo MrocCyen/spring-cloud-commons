@@ -35,19 +35,27 @@ import org.springframework.stereotype.Component;
  *
  * @author Dave Syer
  */
+
+/**
+ * 收集被@ConfigurationProperties注解了的bean
+ */
 @Component
 public class ConfigurationPropertiesBeans implements BeanPostProcessor, ApplicationContextAware {
 
+	//如果当前的context存在父级，则在setApplicationContext方法中将父级的beans进行赋值
 	private Map<String, ConfigurationPropertiesBean> beans = new HashMap<>();
 
+	//setApplicationContext方法中赋值
 	private ApplicationContext applicationContext;
 
+	//setApplicationContext方法中赋值
 	private ConfigurableListableBeanFactory beanFactory;
 
 	private String refreshScope;
 
 	private boolean refreshScopeInitialized;
 
+	//setApplicationContext方法中赋值
 	private ConfigurationPropertiesBeans parent;
 
 	@Override
@@ -60,9 +68,13 @@ public class ConfigurationPropertiesBeans implements BeanPostProcessor, Applicat
 				.getAutowireCapableBeanFactory() instanceof ConfigurableListableBeanFactory) {
 			ConfigurableListableBeanFactory listable = (ConfigurableListableBeanFactory) applicationContext.getParent()
 					.getAutowireCapableBeanFactory();
+			//从父级context获取ConfigurationPropertiesBeans
 			String[] names = listable.getBeanNamesForType(ConfigurationPropertiesBeans.class);
+			//按道理，父级只有一个ConfigurationPropertiesBeans，一般开发者都不会去定义这个类
 			if (names.length == 1) {
+				//设置父级ConfigurationPropertiesBeans
 				this.parent = (ConfigurationPropertiesBeans) listable.getBean(names[0]);
+				//保存父级的ConfigurationPropertiesBeans到本级
 				this.beans.putAll(this.parent.beans);
 			}
 		}
@@ -70,9 +82,11 @@ public class ConfigurationPropertiesBeans implements BeanPostProcessor, Applicat
 
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+		//如果是RefreshScope类型的bean，则直接忽略
 		if (isRefreshScoped(beanName)) {
 			return bean;
 		}
+		//找出当前context中的ConfigurationPropertiesBean
 		ConfigurationPropertiesBean propertiesBean = ConfigurationPropertiesBean.get(this.applicationContext, bean,
 				beanName);
 		if (propertiesBean != null) {
@@ -81,12 +95,20 @@ public class ConfigurationPropertiesBeans implements BeanPostProcessor, Applicat
 		return bean;
 	}
 
+	/**
+	 * 判断是否是refresh作用域，找出RefreshScope，并赋值
+	 *
+	 * @param beanName bean名称
+	 * @return
+	 */
 	private boolean isRefreshScoped(String beanName) {
+		//第一次可以直接进入，找出RefreshScope，并赋值
 		if (this.refreshScope == null && !this.refreshScopeInitialized) {
 			this.refreshScopeInitialized = true;
 			for (String scope : this.beanFactory.getRegisteredScopeNames()) {
 				if (this.beanFactory.getRegisteredScope(
 						scope) instanceof org.springframework.cloud.context.scope.refresh.RefreshScope) {
+					//找出RefreshScope，并赋值
 					this.refreshScope = scope;
 					break;
 				}

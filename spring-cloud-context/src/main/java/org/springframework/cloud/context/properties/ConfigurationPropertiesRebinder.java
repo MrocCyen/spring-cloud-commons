@@ -44,9 +44,13 @@ import org.springframework.util.StringUtils;
  * re-initialized, the changes are available immediately to any component that is using
  * the <code>@ConfigurationProperties</code> bean.
  *
- * @see RefreshScope for a deeper and optionally more focused refresh of bean components.
  * @author Dave Syer
- *
+ * @see RefreshScope for a deeper and optionally more focused refresh of bean components.
+ */
+
+/**
+ * 针对@ConfigurationProperties的bean，在环境发生变化后，也就是产生了EnvironmentChangeEvent事件，
+ * 该类可以绑定这些bean到环境中
  */
 @Component
 @ManagedResource
@@ -70,6 +74,7 @@ public class ConfigurationPropertiesRebinder
 
 	/**
 	 * A map of bean name to errors when instantiating the bean.
+	 *
 	 * @return The errors accumulated since the latest destroy.
 	 */
 	public Map<String, Exception> getErrors() {
@@ -78,6 +83,7 @@ public class ConfigurationPropertiesRebinder
 
 	@ManagedOperation
 	public void rebind() {
+		//清除错误信息
 		this.errors.clear();
 		for (String name : this.beans.getBeanNames()) {
 			rebind(name);
@@ -92,6 +98,7 @@ public class ConfigurationPropertiesRebinder
 		if (this.applicationContext != null) {
 			try {
 				Object bean = this.applicationContext.getBean(name);
+				//代理对象处理
 				if (AopUtils.isAopProxy(bean)) {
 					bean = ProxyUtils.getTargetObject(bean);
 				}
@@ -105,12 +112,10 @@ public class ConfigurationPropertiesRebinder
 					this.applicationContext.getAutowireCapableBeanFactory().initializeBean(bean, name);
 					return true;
 				}
-			}
-			catch (RuntimeException e) {
+			} catch (RuntimeException e) {
 				this.errors.put(name, e);
 				throw e;
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				this.errors.put(name, e);
 				throw new IllegalStateException("Cannot rebind to " + name, e);
 			}
@@ -132,6 +137,7 @@ public class ConfigurationPropertiesRebinder
 
 	@Override
 	public void onApplicationEvent(EnvironmentChangeEvent event) {
+		//是当前的context
 		if (this.applicationContext.equals(event.getSource())
 				// Backwards compatible
 				|| event.getKeys().equals(event.getSource())) {
