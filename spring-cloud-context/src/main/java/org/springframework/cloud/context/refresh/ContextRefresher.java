@@ -98,8 +98,11 @@ public abstract class ContextRefresher {
 	}
 
 	public synchronized Set<String> refresh() {
+		//更新环境
 		Set<String> keys = refreshEnvironment();
+		//todo 刷新所有的scope
 		this.scope.refreshAll();
+
 		return keys;
 	}
 
@@ -118,7 +121,7 @@ public abstract class ContextRefresher {
 		Set<String> keys = changes(before, extract(this.context.getEnvironment().getPropertySources())).keySet();
 		//发布环境变更事件
 		this.context.publishEvent(new EnvironmentChangeEvent(this.context, keys));
-		
+
 		return keys;
 	}
 
@@ -150,16 +153,30 @@ public abstract class ContextRefresher {
 		return environment;
 	}
 
+	/**
+	 * 前后环境变化的处理
+	 *
+	 * @param before
+	 * @param after
+	 * @return
+	 */
 	private Map<String, Object> changes(Map<String, Object> before, Map<String, Object> after) {
-		Map<String, Object> result = new HashMap<String, Object>();
+		Map<String, Object> result = new HashMap<>();
+		//遍历之前的环境
 		for (String key : before.keySet()) {
+			//如果之后的环境没有当前key对应的值
 			if (!after.containsKey(key)) {
+				//保存null到result
 				result.put(key, null);
 			} else if (!equal(before.get(key), after.get(key))) {
+				//如果之前和之后都存在值
+				//这两个值不相等，则保存之后的值到result
 				result.put(key, after.get(key));
 			}
 		}
+		//遍历之后的环境
 		for (String key : after.keySet()) {
+			//如果不在之前的环境中，则直接保存到result
 			if (!before.containsKey(key)) {
 				result.put(key, after.get(key));
 			}
