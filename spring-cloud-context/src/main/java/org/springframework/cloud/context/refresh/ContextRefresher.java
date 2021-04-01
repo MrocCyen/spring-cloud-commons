@@ -46,16 +46,23 @@ import org.springframework.web.context.support.StandardServletEnvironment;
  * @author Dave Syer
  * @author Venil Noronha
  */
+
+/**
+ * 用于刷新上下文context
+ */
 public abstract class ContextRefresher {
 
 	protected final Log logger = LogFactory.getLog(getClass());
 
+	//刷新属性名
 	protected static final String REFRESH_ARGS_PROPERTY_SOURCE = "refreshArgs";
 
-	protected static final String[] DEFAULT_PROPERTY_SOURCES = new String[] {
+	//默认属性名
+	protected static final String[] DEFAULT_PROPERTY_SOURCES = new String[]{
 			// order matters, if cli args aren't first, things get messy
-			CommandLinePropertySource.COMMAND_LINE_PROPERTY_SOURCE_NAME, "defaultProperties" };
+			CommandLinePropertySource.COMMAND_LINE_PROPERTY_SOURCE_NAME, "defaultProperties"};
 
+	//环境中本来标准的属性名
 	protected Set<String> standardSources = new HashSet<>(
 			Arrays.asList(StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
 					StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
@@ -76,7 +83,7 @@ public abstract class ContextRefresher {
 
 	@SuppressWarnings("unchecked")
 	protected ContextRefresher(ConfigurableApplicationContext context, RefreshScope scope,
-			RefreshAutoConfiguration.RefreshProperties properties) {
+							   RefreshAutoConfiguration.RefreshProperties properties) {
 		this.context = context;
 		this.scope = scope;
 		additionalPropertySourcesToRetain = properties.getAdditionalPropertySourcesToRetain();
@@ -96,11 +103,22 @@ public abstract class ContextRefresher {
 		return keys;
 	}
 
+	/**
+	 * 刷新环境
+	 *
+	 * @return
+	 */
 	public synchronized Set<String> refreshEnvironment() {
+		//提取出不是环境系统标准的属性值，before
 		Map<String, Object> before = extract(this.context.getEnvironment().getPropertySources());
+		//模板方法，更新环境，子类实现
 		updateEnvironment();
+		//1、先提取出变化后的环境的值，extract(this.context.getEnvironment().getPropertySources())
+		//2、进行改变环境
 		Set<String> keys = changes(before, extract(this.context.getEnvironment().getPropertySources())).keySet();
+		//发布环境变更事件
 		this.context.publishEvent(new EnvironmentChangeEvent(this.context, keys));
+		
 		return keys;
 	}
 
@@ -122,8 +140,7 @@ public abstract class ContextRefresher {
 			if (input.getPropertySources().contains(name)) {
 				if (capturedPropertySources.contains(name)) {
 					capturedPropertySources.replace(name, input.getPropertySources().get(name));
-				}
-				else {
+				} else {
 					capturedPropertySources.addLast(input.getPropertySources().get(name));
 				}
 			}
@@ -138,8 +155,7 @@ public abstract class ContextRefresher {
 		for (String key : before.keySet()) {
 			if (!after.containsKey(key)) {
 				result.put(key, null);
-			}
-			else if (!equal(before.get(key), after.get(key))) {
+			} else if (!equal(before.get(key), after.get(key))) {
 				result.put(key, after.get(key));
 			}
 		}
@@ -161,36 +177,43 @@ public abstract class ContextRefresher {
 		return one.equals(two);
 	}
 
+	//不是系统标准的属性提取出来
 	private Map<String, Object> extract(MutablePropertySources propertySources) {
-		Map<String, Object> result = new HashMap<String, Object>();
-		List<PropertySource<?>> sources = new ArrayList<PropertySource<?>>();
+		Map<String, Object> result = new HashMap<>();
+		List<PropertySource<?>> sources = new ArrayList<>();
+
 		for (PropertySource<?> source : propertySources) {
+			//添加到first
 			sources.add(0, source);
 		}
+
 		for (PropertySource<?> source : sources) {
+			//不是系统标准属性，单独处理一下
 			if (!this.standardSources.contains(source.getName())) {
 				extract(source, result);
 			}
 		}
+
 		return result;
 	}
 
 	private void extract(PropertySource<?> parent, Map<String, Object> result) {
 		if (parent instanceof CompositePropertySource) {
 			try {
-				List<PropertySource<?>> sources = new ArrayList<PropertySource<?>>();
+				List<PropertySource<?>> sources = new ArrayList<>();
 				for (PropertySource<?> source : ((CompositePropertySource) parent).getPropertySources()) {
+					//添加到first
 					sources.add(0, source);
 				}
 				for (PropertySource<?> source : sources) {
+					//递归添加CompositePropertySource内的PropertySource
 					extract(source, result);
 				}
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				return;
 			}
-		}
-		else if (parent instanceof EnumerablePropertySource) {
+		} else if (parent instanceof EnumerablePropertySource) {
+			//将属性值添加进result中
 			for (String key : ((EnumerablePropertySource<?>) parent).getPropertyNames()) {
 				result.put(key, parent.getProperty(key));
 			}
