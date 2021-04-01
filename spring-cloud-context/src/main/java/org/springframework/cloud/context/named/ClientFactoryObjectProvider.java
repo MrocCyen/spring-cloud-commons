@@ -34,12 +34,25 @@ import org.springframework.lang.Nullable;
  */
 class ClientFactoryObjectProvider<T> implements ObjectProvider<T> {
 
+	/**
+	 * 创建ObjectProvider对象的工厂
+	 */
 	private final NamedContextFactory<?> clientFactory;
 
+	/**
+	 * //要获取ObjectProvider对象所在的上下文context的名称
+	 * //通过这个名称可以在NamedContextFactory的contexts变量中找到对应的context
+	 */
 	private final String name;
 
+	/**
+	 * //bean的class类型对象
+	 */
 	private final Class<T> type;
 
+	/**
+	 * //被代理的对象提供者
+	 */
 	private ObjectProvider<T> provider;
 
 	ClientFactoryObjectProvider(NamedContextFactory<?> clientFactory, String name, Class<T> type) {

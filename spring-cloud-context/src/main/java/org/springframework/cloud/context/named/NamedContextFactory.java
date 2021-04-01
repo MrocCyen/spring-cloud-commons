@@ -39,14 +39,13 @@ import org.springframework.core.env.MapPropertySource;
 /**
  * Creates a set of child contexts that allows a set of Specifications to define the beans
  * in each child context.
- *
+ * <p>
  * Ported from spring-cloud-netflix FeignClientFactory and SpringClientFactory
  *
  * @param <C> specification
  * @author Spencer Gibb
  * @author Dave Syer
  */
-// TODO: add javadoc
 public abstract class NamedContextFactory<C extends NamedContextFactory.Specification>
 		implements DisposableBean, ApplicationContextAware {
 
@@ -54,12 +53,24 @@ public abstract class NamedContextFactory<C extends NamedContextFactory.Specific
 
 	private final String propertyName;
 
+	/**
+	 * 存储在多个上下文context
+	 */
 	private Map<String, AnnotationConfigApplicationContext> contexts = new ConcurrentHashMap<>();
 
+	/**
+	 * 存储Specification的map
+	 */
 	private Map<String, C> configurations = new ConcurrentHashMap<>();
 
+	/**
+	 * 父级context
+	 */
 	private ApplicationContext parent;
 
+	/**
+	 * 默认的配置类
+	 */
 	private Class<?> defaultConfigType;
 
 	public NamedContextFactory(Class<?> defaultConfigType, String propertySourceName, String propertyName) {
@@ -70,16 +81,19 @@ public abstract class NamedContextFactory<C extends NamedContextFactory.Specific
 
 	@Override
 	public void setApplicationContext(ApplicationContext parent) throws BeansException {
+		//设置父级context
 		this.parent = parent;
 	}
 
 	public void setConfigurations(List<C> configurations) {
+		//设置Specification
 		for (C client : configurations) {
 			this.configurations.put(client.getName(), client);
 		}
 	}
 
 	public Set<String> getContextNames() {
+		//获取存储context的map的key的集合
 		return new HashSet<>(this.contexts.keySet());
 	}
 
@@ -89,6 +103,7 @@ public abstract class NamedContextFactory<C extends NamedContextFactory.Specific
 		for (AnnotationConfigApplicationContext context : values) {
 			// This can fail, but it never throws an exception (you see stack traces
 			// logged as WARN).
+			//关闭每个context
 			context.close();
 		}
 		this.contexts.clear();
@@ -105,23 +120,36 @@ public abstract class NamedContextFactory<C extends NamedContextFactory.Specific
 		return this.contexts.get(name);
 	}
 
+	/**
+	 * 创建context
+	 *
+	 * @param name context对应map中的名称
+	 * @return
+	 */
 	protected AnnotationConfigApplicationContext createContext(String name) {
+		//新建一个AnnotationConfigApplicationContext
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+		//当前context存在需要注册的bean
 		if (this.configurations.containsKey(name)) {
 			for (Class<?> configuration : this.configurations.get(name).getConfiguration()) {
+				//注册bean
 				context.register(configuration);
 			}
 		}
 		for (Map.Entry<String, C> entry : this.configurations.entrySet()) {
+			//如果存在key为default.开头，则会直接注册进context
 			if (entry.getKey().startsWith("default.")) {
 				for (Class<?> configuration : entry.getValue().getConfiguration()) {
 					context.register(configuration);
 				}
 			}
 		}
+		//注册PropertyPlaceholderAutoConfiguration，处理占位符
+		//注册defaultConfigType
 		context.register(PropertyPlaceholderAutoConfiguration.class, this.defaultConfigType);
+		//为context注册一个property，值为name
 		context.getEnvironment().getPropertySources().addFirst(new MapPropertySource(this.propertySourceName,
-				Collections.<String, Object>singletonMap(this.propertyName, name)));
+				Collections.singletonMap(this.propertyName, name)));
 		if (this.parent != null) {
 			// Uses Environment from parent as well as beans
 			context.setParent(this.parent);
@@ -130,6 +158,7 @@ public abstract class NamedContextFactory<C extends NamedContextFactory.Specific
 			context.setClassLoader(this.parent.getClassLoader());
 		}
 		context.setDisplayName(generateDisplayName(name));
+		//刷新context
 		context.refresh();
 		return context;
 	}
@@ -138,12 +167,12 @@ public abstract class NamedContextFactory<C extends NamedContextFactory.Specific
 		return this.getClass().getSimpleName() + "-" + name;
 	}
 
+	//从名称为name的context中获取类型是type的bean实例
 	public <T> T getInstance(String name, Class<T> type) {
 		AnnotationConfigApplicationContext context = getContext(name);
 		try {
 			return context.getBean(type);
-		}
-		catch (NoSuchBeanDefinitionException e) {
+		} catch (NoSuchBeanDefinitionException e) {
 			// ignore
 		}
 		return null;
@@ -153,6 +182,8 @@ public abstract class NamedContextFactory<C extends NamedContextFactory.Specific
 		return new ClientFactoryObjectProvider<>(this, name, type);
 	}
 
+	//获取ObjectProvider
+	//name为context的名称
 	public <T> ObjectProvider<T> getProvider(String name, Class<T> type) {
 		AnnotationConfigApplicationContext context = getContext(name);
 		return context.getBeanProvider(type);
@@ -186,10 +217,15 @@ public abstract class NamedContextFactory<C extends NamedContextFactory.Specific
 	/**
 	 * Specification with name and configuration.
 	 */
+	/**
+	 * 封装每个context中的bean
+	 */
 	public interface Specification {
 
+		//context的名字
 		String getName();
 
+		//bean的类型
 		Class<?>[] getConfiguration();
 
 	}
