@@ -62,7 +62,6 @@ import org.springframework.jmx.export.annotation.ManagedResource;
  *
  * @author Dave Syer
  * @since 3.1
- *
  */
 @ManagedResource
 public class RefreshScope extends GenericScope
@@ -95,6 +94,7 @@ public class RefreshScope extends GenericScope
 	/**
 	 * Flag to determine whether all beans in refresh scope should be instantiated eagerly
 	 * on startup. Default true.
+	 *
 	 * @param eager The flag to set.
 	 */
 	public void setEager(boolean eager) {

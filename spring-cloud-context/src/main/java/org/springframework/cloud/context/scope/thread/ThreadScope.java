@@ -21,7 +21,6 @@ import org.springframework.cloud.context.scope.GenericScope;
 /**
  * @author Dave Syer
  * @since 3.1
- *
  */
 public class ThreadScope extends GenericScope {
 

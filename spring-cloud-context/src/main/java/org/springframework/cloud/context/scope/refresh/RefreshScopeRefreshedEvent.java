@@ -29,7 +29,7 @@ public class RefreshScopeRefreshedEvent extends ApplicationEvent {
 	 */
 	public static final String DEFAULT_NAME = "__refreshAll__";
 
-	private String name;
+	private final String name;
 
 	public RefreshScopeRefreshedEvent() {
 		this(DEFAULT_NAME);

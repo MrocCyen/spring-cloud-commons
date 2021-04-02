@@ -68,7 +68,6 @@ import org.springframework.util.StringUtils;
  *
  * @author Dave Syer
  * @since 3.1
- *
  */
 public class GenericScope
 		implements Scope, BeanFactoryPostProcessor, BeanDefinitionRegistryPostProcessor, DisposableBean {
@@ -102,6 +101,7 @@ public class GenericScope
 	/**
 	 * Manual override for the serialization ID that will be used to identify the bean
 	 * factory. The default is a unique key based on the bean names in the bean factory.
+	 *
 	 * @param id The ID to set.
 	 */
 	public void setId(String id) {
@@ -110,6 +110,7 @@ public class GenericScope
 
 	/**
 	 * The cache implementation to use for bean instances in this scope.
+	 *
 	 * @param cache The cache to use.
 	 */
 	public void setScopeCache(ScopeCache cache) {
@@ -118,6 +119,7 @@ public class GenericScope
 
 	/**
 	 * A map of bean name to errors when instantiating the bean.
+	 *
 	 * @return The errors accumulated since the latest destroy.
 	 */
 	public Map<String, Exception> getErrors() {
@@ -126,7 +128,7 @@ public class GenericScope
 
 	@Override
 	public void destroy() {
-		List<Throwable> errors = new ArrayList<Throwable>();
+		List<Throwable> errors = new ArrayList<>();
 		Collection<BeanLifecycleWrapper> wrappers = this.cache.clear();
 		for (BeanLifecycleWrapper wrapper : wrappers) {
 			try {
@@ -134,12 +136,10 @@ public class GenericScope
 				lock.lock();
 				try {
 					wrapper.destroy();
-				}
-				finally {
+				} finally {
 					lock.unlock();
 				}
-			}
-			catch (RuntimeException e) {
+			} catch (RuntimeException e) {
 				errors.add(e);
 			}
 		}
@@ -151,6 +151,7 @@ public class GenericScope
 
 	/**
 	 * Destroys the named bean (i.e. flushes it from the cache by default).
+	 *
 	 * @param name The bean name to flush.
 	 * @return True if the bean was already cached; false otherwise.
 	 */
@@ -161,8 +162,7 @@ public class GenericScope
 			lock.lock();
 			try {
 				wrapper.destroy();
-			}
-			finally {
+			} finally {
 				lock.unlock();
 			}
 			this.errors.remove(name);
@@ -177,8 +177,7 @@ public class GenericScope
 		this.locks.putIfAbsent(name, new ReentrantReadWriteLock());
 		try {
 			return value.getBean();
-		}
-		catch (RuntimeException e) {
+		} catch (RuntimeException e) {
 			this.errors.put(name, e);
 			throw e;
 		}
@@ -221,13 +220,11 @@ public class GenericScope
 			ExpressionParser parser = new SpelExpressionParser();
 			try {
 				return parser.parseExpression(input);
-			}
-			catch (ParseException e) {
+			} catch (ParseException e) {
 				throw new IllegalArgumentException("Cannot parse expression: " + input, e);
 			}
 
-		}
-		else {
+		} else {
 			return null;
 		}
 	}
@@ -265,6 +262,7 @@ public class GenericScope
 	 * IDs of the bean factories match. This method sets up the serialization ID to be
 	 * either the ID provided to the scope instance, or if that is null, a hash of all the
 	 * bean names.
+	 *
 	 * @param beanFactory The bean factory to configure.
 	 */
 	private void setSerializationId(ConfigurableListableBeanFactory beanFactory) {
@@ -283,8 +281,7 @@ public class GenericScope
 			logger.info("BeanFactory id=" + id);
 			((DefaultListableBeanFactory) beanFactory).setSerializationId(id);
 
-		}
-		else {
+		} else {
 			logger.warn(
 					"BeanFactory was not a DefaultListableBeanFactory, scoped proxy beans " + "cannot be serialized.");
 		}
@@ -297,6 +294,7 @@ public class GenericScope
 
 	/**
 	 * The name of this scope. Default "generic".
+	 *
 	 * @param name The name value to set.
 	 */
 	public void setName(String name) {
@@ -307,6 +305,9 @@ public class GenericScope
 		return this.locks.get(beanName);
 	}
 
+	/**
+	 * 用来缓存BeanLifecycleWrapper，存储在ScopeCache中
+	 */
 	private static class BeanLifecycleWrapperCache {
 
 		private final ScopeCache cache;
@@ -321,7 +322,7 @@ public class GenericScope
 
 		public Collection<BeanLifecycleWrapper> clear() {
 			Collection<Object> values = this.cache.clear();
-			Collection<BeanLifecycleWrapper> wrappers = new LinkedHashSet<BeanLifecycleWrapper>();
+			Collection<BeanLifecycleWrapper> wrappers = new LinkedHashSet<>();
 			for (Object object : values) {
 				wrappers.add((BeanLifecycleWrapper) object);
 			}
@@ -344,16 +345,23 @@ public class GenericScope
 	 * concurrent access (for instance).
 	 *
 	 * @author Dave Syer
-	 *
+	 */
+	/**
+	 * 包装bean
 	 */
 	private static class BeanLifecycleWrapper {
 
+		//bean的名称
 		private final String name;
 
+		//对象工厂
 		private final ObjectFactory<?> objectFactory;
 
 		private volatile Object bean;
 
+		/**
+		 * 销毁回调接口
+		 */
 		private Runnable callback;
 
 		BeanLifecycleWrapper(String name, ObjectFactory<?> objectFactory) {
@@ -369,6 +377,11 @@ public class GenericScope
 			this.callback = callback;
 		}
 
+		/**
+		 * 从对象工厂回去bean
+		 *
+		 * @return bean
+		 */
 		public Object getBean() {
 			if (this.bean == null) {
 				synchronized (this.name) {
@@ -380,6 +393,9 @@ public class GenericScope
 			return this.bean;
 		}
 
+		/**
+		 * 置空bean，并执行回调函数
+		 */
 		public void destroy() {
 			if (this.callback == null) {
 				return;
@@ -418,8 +434,7 @@ public class GenericScope
 				if (other.name != null) {
 					return false;
 				}
-			}
-			else if (!this.name.equals(other.name)) {
+			} else if (!this.name.equals(other.name)) {
 				return false;
 			}
 			return true;
@@ -436,8 +451,10 @@ public class GenericScope
 	public static class LockedScopedProxyFactoryBean<S extends GenericScope> extends ScopedProxyFactoryBean
 			implements MethodInterceptor {
 
+		//scope
 		private final S scope;
 
+		//目标bean名称
 		private String targetBeanName;
 
 		public LockedScopedProxyFactoryBean(S scope) {
@@ -447,6 +464,7 @@ public class GenericScope
 		@Override
 		public void setBeanFactory(BeanFactory beanFactory) {
 			super.setBeanFactory(beanFactory);
+			//获得代理对象
 			Object proxy = getObject();
 			if (proxy instanceof Advised) {
 				Advised advised = (Advised) proxy;
@@ -454,6 +472,7 @@ public class GenericScope
 			}
 		}
 
+		//设置目标bean的名称
 		@Override
 		public void setTargetBeanName(String targetBeanName) {
 			super.setTargetBeanName(targetBeanName);
@@ -491,8 +510,7 @@ public class GenericScope
 			// UndeclaredThrowableException
 			catch (UndeclaredThrowableException e) {
 				throw e.getUndeclaredThrowable();
-			}
-			finally {
+			} finally {
 				lock.unlock();
 			}
 		}
