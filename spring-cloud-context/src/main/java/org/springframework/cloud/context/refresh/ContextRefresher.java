@@ -100,7 +100,7 @@ public abstract class ContextRefresher {
 	public synchronized Set<String> refresh() {
 		//更新环境
 		Set<String> keys = refreshEnvironment();
-		//todo 刷新所有的scope
+		//刷新所有的scope
 		this.scope.refreshAll();
 
 		return keys;

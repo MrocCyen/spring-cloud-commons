@@ -38,7 +38,7 @@ public class ConfigDataContextRefresher extends ContextRefresher {
 	}
 
 	public ConfigDataContextRefresher(ConfigurableApplicationContext context, RefreshScope scope,
-			RefreshAutoConfiguration.RefreshProperties properties) {
+									  RefreshAutoConfiguration.RefreshProperties properties) {
 		super(context, scope, properties);
 	}
 
@@ -47,33 +47,39 @@ public class ConfigDataContextRefresher extends ContextRefresher {
 		if (logger.isTraceEnabled()) {
 			logger.trace("Re-processing environment to add config data");
 		}
+		//按照当前的环境复制一份
 		StandardEnvironment environment = copyEnvironment(getContext().getEnvironment());
+		//获取当前环境的profiles
 		String[] activeProfiles = getContext().getEnvironment().getActiveProfiles();
-		DefaultResourceLoader resourceLoader = new DefaultResourceLoader();
-		ConfigDataEnvironmentPostProcessor.applyTo(environment, resourceLoader, new DefaultBootstrapContext(),
+		//todo 应用环境 ConfigDataEnvironmentPostProcessor这个类需要好好看看
+		ConfigDataEnvironmentPostProcessor.applyTo(environment, new DefaultResourceLoader(), new DefaultBootstrapContext(),
 				activeProfiles);
-
+		//移除名为refreshArgs的属性PropertySources
 		if (environment.getPropertySources().contains(REFRESH_ARGS_PROPERTY_SOURCE)) {
 			environment.getPropertySources().remove(REFRESH_ARGS_PROPERTY_SOURCE);
 		}
+		//原始context中环境的属性
 		MutablePropertySources target = getContext().getEnvironment().getPropertySources();
 		String targetName = null;
+		//更新后的环境中的属性
 		for (PropertySource<?> source : environment.getPropertySources()) {
 			String name = source.getName();
+			//如果原始环境中有这个属性集合，赋值targetName
 			if (target.contains(name)) {
 				targetName = name;
 			}
+			//不是系统标准的环境属性
 			if (!this.standardSources.contains(name)) {
+				//如果原始环境中有这个属性集合
 				if (target.contains(name)) {
+					//替换原始环境中的属性
 					target.replace(name, source);
-				}
-				else {
+				} else {//如果原始环境中没有这个属性集合
 					if (targetName != null) {
 						target.addAfter(targetName, source);
 						// update targetName to preserve ordering
 						targetName = name;
-					}
-					else {
+					} else {
 						// targetName was null so we are at the start of the list
 						target.addFirst(source);
 						targetName = name;

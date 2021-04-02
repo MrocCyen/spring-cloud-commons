@@ -47,7 +47,7 @@ public class LegacyContextRefresher extends ContextRefresher {
 	}
 
 	public LegacyContextRefresher(ConfigurableApplicationContext context, RefreshScope scope,
-			RefreshAutoConfiguration.RefreshProperties properties) {
+								  RefreshAutoConfiguration.RefreshProperties properties) {
 		super(context, scope, properties);
 	}
 
@@ -59,8 +59,10 @@ public class LegacyContextRefresher extends ContextRefresher {
 	/* For testing. */ ConfigurableApplicationContext addConfigFilesToEnvironment() {
 		ConfigurableApplicationContext capture = null;
 		try {
+			//复制出新的环境
 			StandardEnvironment environment = copyEnvironment(getContext().getEnvironment());
 
+			//添加属性名为refreshArgs的属性到新的环境中，用于后续构造SpringBootApplication
 			Map<String, Object> map = new HashMap<>();
 			map.put("spring.jmx.enabled", false);
 			map.put("spring.main.sources", "");
@@ -69,18 +71,24 @@ public class LegacyContextRefresher extends ContextRefresher {
 			map.put(BOOTSTRAP_ENABLED_PROPERTY, Boolean.TRUE.toString());
 			environment.getPropertySources().addFirst(new MapPropertySource(REFRESH_ARGS_PROPERTY_SOURCE, map));
 
+			//使用新环境构造SpringBootApplication
 			SpringApplicationBuilder builder = new SpringApplicationBuilder(Empty.class).bannerMode(Banner.Mode.OFF)
 					.web(WebApplicationType.NONE).environment(environment);
 			// Just the listeners that affect the environment (e.g. excluding logging
 			// listener because it has side effects)
 			builder.application().setListeners(
 					Arrays.asList(new BootstrapApplicationListener(), new BootstrapConfigFileApplicationListener()));
+			//执行run，并获取context
 			capture = builder.run();
+			//移除名为refreshArgs的属性PropertySources
 			if (environment.getPropertySources().contains(REFRESH_ARGS_PROPERTY_SOURCE)) {
 				environment.getPropertySources().remove(REFRESH_ARGS_PROPERTY_SOURCE);
 			}
+
+			//原始context中环境的属性
 			MutablePropertySources target = getContext().getEnvironment().getPropertySources();
 			String targetName = null;
+			//更新后的环境中的属性
 			for (PropertySource<?> source : environment.getPropertySources()) {
 				String name = source.getName();
 				if (target.contains(name)) {
@@ -89,14 +97,12 @@ public class LegacyContextRefresher extends ContextRefresher {
 				if (!this.standardSources.contains(name)) {
 					if (target.contains(name)) {
 						target.replace(name, source);
-					}
-					else {
+					} else {
 						if (targetName != null) {
 							target.addAfter(targetName, source);
 							// update targetName to preserve ordering
 							targetName = name;
-						}
-						else {
+						} else {
 							// targetName was null so we are at the start of the list
 							target.addFirst(source);
 							targetName = name;
@@ -104,20 +110,18 @@ public class LegacyContextRefresher extends ContextRefresher {
 					}
 				}
 			}
-		}
-		finally {
+		} finally {
+			//关闭
 			ConfigurableApplicationContext closeable = capture;
 			while (closeable != null) {
 				try {
 					closeable.close();
-				}
-				catch (Exception e) {
+				} catch (Exception e) {
 					// Ignore;
 				}
 				if (closeable.getParent() instanceof ConfigurableApplicationContext) {
 					closeable = (ConfigurableApplicationContext) closeable.getParent();
-				}
-				else {
+				} else {
 					break;
 				}
 			}
