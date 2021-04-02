@@ -19,10 +19,20 @@ package org.springframework.cloud.context.restart;
 /**
  * @author Dave Syer
  */
+
+/**
+ * 暂停处理器
+ */
 public interface PauseHandler {
 
+	/**
+	 * 暂停
+	 */
 	void pause();
 
+	/**
+	 * 恢复
+	 */
 	void resume();
 
 }

@@ -48,19 +48,25 @@ import org.springframework.util.ClassUtils;
  * needed to doRestart the context.
  *
  * @author Dave Syer
- *
  */
 @Endpoint(id = "restart", enableByDefault = false)
 public class RestartEndpoint implements ApplicationListener<ApplicationPreparedEvent> {
 
-	private static Log logger = LogFactory.getLog(RestartEndpoint.class);
+	private static final Log logger = LogFactory.getLog(RestartEndpoint.class);
 
+	/**
+	 * 上下文context
+	 */
 	private ConfigurableApplicationContext context;
 
+	//Stringboot应用程序
 	private SpringApplication application;
 
 	private String[] args;
 
+	/**
+	 * 应用程序已准备事件
+	 */
 	private ApplicationPreparedEvent event;
 
 	private IntegrationShutdown integrationShutdown;
@@ -86,8 +92,11 @@ public class RestartEndpoint implements ApplicationListener<ApplicationPreparedE
 
 	@Override
 	public void onApplicationEvent(ApplicationPreparedEvent input) {
+		//每次都对事件赋值
 		this.event = input;
+		//第一次的时候创建
 		if (this.context == null) {
+			//属性赋值
 			this.context = this.event.getApplicationContext();
 			this.args = this.event.getArgs();
 			this.application = this.event.getSpringApplication();
@@ -99,6 +108,7 @@ public class RestartEndpoint implements ApplicationListener<ApplicationPreparedE
 
 	@WriteOperation
 	public Object restart() {
+		//新线程处理
 		Thread thread = new Thread(this::safeRestart);
 		thread.setDaemon(false);
 		thread.start();
@@ -110,12 +120,10 @@ public class RestartEndpoint implements ApplicationListener<ApplicationPreparedE
 			doRestart();
 			logger.info("Restarted");
 			return true;
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			if (logger.isDebugEnabled()) {
 				logger.info("Could not doRestart", e);
-			}
-			else {
+			} else {
 				logger.info("Could not doRestart: " + e.getMessage());
 			}
 			return false;
@@ -136,23 +144,27 @@ public class RestartEndpoint implements ApplicationListener<ApplicationPreparedE
 			if (this.integrationShutdown != null) {
 				this.integrationShutdown.stop(this.timeout);
 			}
+			//给springboot应用程序设置环境
 			this.application.setEnvironment(this.context.getEnvironment());
+			//进行关闭操作
 			close();
 			// If running in a webapp then the context classloader is probably going to
 			// die so we need to revert to a safe place before starting again
+			//需要先恢复类加载器，防止在web环境下出现类加载器出现问题
 			overrideClassLoaderForRestart();
+			//重新执行run方法，启动springboot应用程序
 			this.context = this.application.run(this.args);
 		}
 		return this.context;
 	}
 
 	private void close() {
+		//循环关闭context及其父级
 		ApplicationContext context = this.context;
 		while (context instanceof Closeable) {
 			try {
 				((Closeable) context).close();
-			}
-			catch (IOException e) {
+			} catch (IOException e) {
 				logger.error("Cannot close context: " + context.getId(), e);
 			}
 			context = context.getParent();
@@ -176,7 +188,7 @@ public class RestartEndpoint implements ApplicationListener<ApplicationPreparedE
 
 	// @ManagedOperation
 	public synchronized void doResume() {
-		for (int i = this.pauseHandlers.size(); i-- > 0;) {
+		for (int i = this.pauseHandlers.size(); i-- > 0; ) {
 			PauseHandler handler = this.pauseHandlers.get(i);
 			handler.resume();
 		}
