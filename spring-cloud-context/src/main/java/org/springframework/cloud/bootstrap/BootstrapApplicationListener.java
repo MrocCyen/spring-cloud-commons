@@ -72,7 +72,6 @@ import static org.springframework.cloud.util.PropertyUtils.useLegacyProcessing;
  * "application.properties".
  *
  * @author Dave Syer
- *
  */
 public class BootstrapApplicationListener implements ApplicationListener<ApplicationEnvironmentPreparedEvent>, Ordered {
 
@@ -95,33 +94,51 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 
 	@Override
 	public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
+		//获取当前环境
 		ConfigurableEnvironment environment = event.getEnvironment();
+		//条件判断
 		if (!bootstrapEnabled(environment) && !useLegacyProcessing(environment)) {
 			return;
 		}
 		// don't listen to events in a bootstrap context
+		//如果当前环境中存在名为bootstrap的PropertySource
 		if (environment.getPropertySources().contains(BOOTSTRAP_PROPERTY_SOURCE_NAME)) {
 			return;
 		}
 		ConfigurableApplicationContext context = null;
+		//启动上下文名称，这里解决占位符的问题
+		//没有配置的话默认是bootstrap
 		String configName = environment.resolvePlaceholders("${spring.cloud.bootstrap.name:bootstrap}");
+		//获取当前springapplication中的ApplicationContextInitializer
 		for (ApplicationContextInitializer<?> initializer : event.getSpringApplication().getInitializers()) {
+			//如果存在ParentContextApplicationContextInitializer，则直接赋值给context
 			if (initializer instanceof ParentContextApplicationContextInitializer) {
+				//寻找父级启动上下文
 				context = findBootstrapContext((ParentContextApplicationContextInitializer) initializer, configName);
 			}
 		}
 		if (context == null) {
+			//创建父级启动上下文
 			context = bootstrapServiceContext(environment, event.getSpringApplication(), configName);
+			//添加当前springapplication的close监听器
 			event.getSpringApplication().addListeners(new CloseContextOnFailureApplicationListener(context));
 		}
 
 		apply(context, event.getSpringApplication(), environment);
 	}
 
+	/**
+	 * 寻找父级启动上下文
+	 *
+	 * @param initializer
+	 * @param configName
+	 * @return
+	 */
 	private ConfigurableApplicationContext findBootstrapContext(ParentContextApplicationContextInitializer initializer,
-			String configName) {
+																String configName) {
 		Field field = ReflectionUtils.findField(ParentContextApplicationContextInitializer.class, "parent");
 		ReflectionUtils.makeAccessible(field);
+		//找到父级上下文
 		ConfigurableApplicationContext parent = safeCast(ConfigurableApplicationContext.class,
 				ReflectionUtils.getField(field, initializer));
 		if (parent != null && !configName.equals(parent.getId())) {
@@ -133,22 +150,23 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 	private <T> T safeCast(Class<T> type, Object object) {
 		try {
 			return type.cast(object);
-		}
-		catch (ClassCastException e) {
+		} catch (ClassCastException e) {
 			return null;
 		}
 	}
 
 	private ConfigurableApplicationContext bootstrapServiceContext(ConfigurableEnvironment environment,
-			final SpringApplication application, String configName) {
+																   final SpringApplication application,
+																   String configName) {
+		//创建一个标准的环境
 		StandardEnvironment bootstrapEnvironment = new StandardEnvironment();
 		MutablePropertySources bootstrapProperties = bootstrapEnvironment.getPropertySources();
+		//移除所有的PropertySource
 		for (PropertySource<?> source : bootstrapProperties) {
 			bootstrapProperties.remove(source.getName());
 		}
 		String configLocation = environment.resolvePlaceholders("${spring.cloud.bootstrap.location:}");
-		String configAdditionalLocation = environment
-				.resolvePlaceholders("${spring.cloud.bootstrap.additional-location:}");
+		String configAdditionalLocation = environment.resolvePlaceholders("${spring.cloud.bootstrap.additional-location:}");
 		Map<String, Object> bootstrapMap = new HashMap<>();
 		bootstrapMap.put("spring.config.name", configName);
 		// if an app (or test) uses spring.main.web-application-type=reactive, bootstrap
@@ -163,13 +181,17 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 		if (StringUtils.hasText(configAdditionalLocation)) {
 			bootstrapMap.put("spring.config.additional-location", configAdditionalLocation);
 		}
+		//添加名为bootstrap的MapPropertySource
 		bootstrapProperties.addFirst(new MapPropertySource(BOOTSTRAP_PROPERTY_SOURCE_NAME, bootstrapMap));
+
+		//将原始环境添加到新环境中
 		for (PropertySource<?> source : environment.getPropertySources()) {
 			if (source instanceof StubPropertySource) {
 				continue;
 			}
 			bootstrapProperties.addLast(source);
 		}
+
 		// TODO: is it possible or sensible to share a ResourceLoader?
 		SpringApplicationBuilder builder = new SpringApplicationBuilder().profiles(environment.getActiveProfiles())
 				.bannerMode(Mode.OFF).environment(bootstrapEnvironment)
@@ -186,6 +208,7 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 			// set by SpringBootServletInitializer itself already.
 			builder.main(application.getMainApplicationClass());
 		}
+		//过滤掉LoggingApplicationListener和LoggingSystemShutdownListener
 		if (environment.getPropertySources().contains("refreshArgs")) {
 			// If we are doing a context refresh, really we only want to refresh the
 			// Environment, and there are some toxic listeners (like the
@@ -194,17 +217,24 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 			builderApplication.setListeners(filterListeners(builderApplication.getListeners()));
 		}
 		builder.sources(BootstrapImportSelectorConfiguration.class);
+		//构建启动上下文
 		final ConfigurableApplicationContext context = builder.run();
 		// gh-214 using spring.application.name=bootstrap to set the context id via
 		// `ContextIdApplicationContextInitializer` prevents apps from getting the actual
 		// spring.application.name
 		// during the bootstrap phase.
+		//设置id
 		context.setId("bootstrap");
 		// Make the bootstrap context a parent of the app context
+		//设置父级上下文
+		//application：原始application
+		//context：新构建的启动上下文
 		addAncestorInitializer(application, context);
 		// It only has properties in it now that we don't want in the parent so remove
 		// it (and it will be added back later)
+		//移除名为bootstrap的MapPropertySource
 		bootstrapProperties.remove(BOOTSTRAP_PROPERTY_SOURCE_NAME);
+		//合并属性
 		mergeDefaultProperties(environment.getPropertySources(), bootstrapProperties);
 		return context;
 	}
@@ -226,8 +256,7 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 			PropertySource<?> source = bootstrap.get(name);
 			if (!environment.contains(name)) {
 				environment.addLast(source);
-			}
-			else {
+			} else {
 				PropertySource<?> target = environment.get(name);
 				if (target instanceof MapPropertySource && target != source && source instanceof MapPropertySource) {
 					Map<String, Object> targetMap = ((MapPropertySource) target).getSource();
@@ -263,8 +292,7 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 	private void addOrReplace(MutablePropertySources environment, PropertySource<?> result) {
 		if (environment.contains(result.getName())) {
 			environment.replace(result.getName(), result);
-		}
-		else {
+		} else {
 			environment.addLast(result);
 		}
 	}
@@ -286,7 +314,7 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 
 	@SuppressWarnings("unchecked")
 	private void apply(ConfigurableApplicationContext context, SpringApplication application,
-			ConfigurableEnvironment environment) {
+					   ConfigurableEnvironment environment) {
 		if (application.getAllSources().contains(BootstrapMarkerConfiguration.class)) {
 			return;
 		}
@@ -309,11 +337,9 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 				decrypter = new DelegatingEnvironmentDecryptApplicationInitializer(del);
 				initializers.add(ini);
 				initializers.add(decrypter);
-			}
-			else if (ini instanceof DelegatingEnvironmentDecryptApplicationInitializer) {
+			} else if (ini instanceof DelegatingEnvironmentDecryptApplicationInitializer) {
 				// do nothing
-			}
-			else {
+			} else {
 				initializers.add(ini);
 			}
 		}
