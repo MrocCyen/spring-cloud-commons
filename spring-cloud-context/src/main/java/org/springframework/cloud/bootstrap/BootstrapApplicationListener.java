@@ -226,7 +226,6 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 		//设置id
 		context.setId("bootstrap");
 		// Make the bootstrap context a parent of the app context
-		//设置父级上下文
 		//application：原始application
 		//context：新构建的启动上下文
 		addAncestorInitializer(application, context);
@@ -236,6 +235,7 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 		bootstrapProperties.remove(BOOTSTRAP_PROPERTY_SOURCE_NAME);
 		//合并属性
 		mergeDefaultProperties(environment.getPropertySources(), bootstrapProperties);
+
 		return context;
 	}
 
@@ -252,6 +252,7 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 
 	private void mergeDefaultProperties(MutablePropertySources environment, MutablePropertySources bootstrap) {
 		String name = DEFAULT_PROPERTIES;
+		//如果包含springCloudDefaultProperties的属性
 		if (bootstrap.contains(name)) {
 			PropertySource<?> source = bootstrap.get(name);
 			if (!environment.contains(name)) {
@@ -269,26 +270,45 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 				}
 			}
 		}
+		//合并
 		mergeAdditionalPropertySources(environment, bootstrap);
 	}
 
+	/**
+	 * @param environment 原始环境
+	 * @param bootstrap   启动环境
+	 */
 	private void mergeAdditionalPropertySources(MutablePropertySources environment, MutablePropertySources bootstrap) {
+		//获取名为springCloudDefaultProperties的PropertySources
 		PropertySource<?> defaultProperties = environment.get(DEFAULT_PROPERTIES);
+		//获取名为springCloudDefaultProperties的PropertySources
 		ExtendedDefaultPropertySource result = defaultProperties instanceof ExtendedDefaultPropertySource
 				? (ExtendedDefaultPropertySource) defaultProperties
+				//构造名为springCloudDefaultProperties的PropertySources
 				: new ExtendedDefaultPropertySource(DEFAULT_PROPERTIES, defaultProperties);
+		//遍历启动上下文的属性，取出不在原始环境中的属性值
 		for (PropertySource<?> source : bootstrap) {
+			//如果属性不在原始的属性中
 			if (!environment.contains(source.getName())) {
+				//添加至result中，保存在内部的可用于跟踪的组合属性中
 				result.add(source);
 			}
 		}
+		//遍历result，在bootstrap中移除这些属性
 		for (String name : result.getPropertySourceNames()) {
 			bootstrap.remove(name);
 		}
+		//****************目前的环境是：result的组合属性中存储的是原始环境和启动环境都没有的值**********************
 		addOrReplace(environment, result);
 		addOrReplace(bootstrap, result);
 	}
 
+	/**
+	 * 将result设置成名为springCloudDefaultProperties的PropertySources
+	 *
+	 * @param environment
+	 * @param result      是
+	 */
 	private void addOrReplace(MutablePropertySources environment, PropertySource<?> result) {
 		if (environment.contains(result.getName())) {
 			environment.replace(result.getName(), result);
@@ -297,8 +317,15 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 		}
 	}
 
+	/**
+	 * 给当前应用程序添加祖先初始化器，祖先初始化器持有启动上下文的引用
+	 *
+	 * @param application 当前应用程序
+	 * @param context     启动上下文
+	 */
 	private void addAncestorInitializer(SpringApplication application, ConfigurableApplicationContext context) {
 		boolean installed = false;
+		//检查当前上下文程序中是否存在AncestorInitializer，存在则设置新的父级上下文，即启动上下文
 		for (ApplicationContextInitializer<?> initializer : application.getInitializers()) {
 			if (initializer instanceof AncestorInitializer) {
 				installed = true;
@@ -306,12 +333,18 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 				((AncestorInitializer) initializer).setParent(context);
 			}
 		}
+		//没有则添加新的AncestorInitializer
 		if (!installed) {
 			application.addInitializers(new AncestorInitializer(context));
 		}
 
 	}
 
+	/**
+	 * @param context     父级上下文
+	 * @param application 当前应用程序
+	 * @param environment 当前应用程序环境
+	 */
 	@SuppressWarnings("unchecked")
 	private void apply(ConfigurableApplicationContext context, SpringApplication application,
 					   ConfigurableEnvironment environment) {
@@ -370,9 +403,15 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 
 	}
 
+	/**
+	 * 祖先应用程序初始化器
+	 */
 	private static class AncestorInitializer
 			implements ApplicationContextInitializer<ConfigurableApplicationContext>, Ordered {
 
+		/**
+		 * 启动上下文
+		 */
 		private ConfigurableApplicationContext parent;
 
 		AncestorInitializer(ConfigurableApplicationContext parent) {
@@ -394,21 +433,37 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 
 		@Override
 		public void initialize(ConfigurableApplicationContext context) {
+			//如果存在父级，找到当前上下文的父级上下文，否则是当前上下文
 			while (context.getParent() != null && context.getParent() != context) {
 				context = (ConfigurableApplicationContext) context.getParent();
 			}
+			//重新排序属性
 			reorderSources(context.getEnvironment());
+			//代理给ParentContextApplicationContextInitializer进行处理
+			//1、设置context的parent为this.parent
+			//2、
 			new ParentContextApplicationContextInitializer(this.parent).initialize(context);
 		}
 
+		/**
+		 * 重新排期属性，添加后系统将不存在ExtendedDefaultPropertySource的属性
+		 *
+		 * @param environment 当前环境或者是父级环境
+		 */
 		private void reorderSources(ConfigurableEnvironment environment) {
+			//移除名为springCloudDefaultProperties的PropertySource
 			PropertySource<?> removed = environment.getPropertySources().remove(DEFAULT_PROPERTIES);
 			if (removed instanceof ExtendedDefaultPropertySource) {
 				ExtendedDefaultPropertySource defaultProperties = (ExtendedDefaultPropertySource) removed;
+				//添加名为名为springCloudDefaultProperties的MapPropertySource
+				//添加至最后
 				environment.getPropertySources()
 						.addLast(new MapPropertySource(DEFAULT_PROPERTIES, defaultProperties.getSource()));
+				//获取复合属性列表
 				for (PropertySource<?> source : defaultProperties.getPropertySources().getPropertySources()) {
+					//环境中没有这个属性
 					if (!environment.getPropertySources().contains(source.getName())) {
+						//添加至springCloudDefaultProperties之前
 						environment.getPropertySources().addBefore(DEFAULT_PROPERTIES, source);
 					}
 				}
@@ -439,14 +494,20 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 
 	}
 
-	private static class ExtendedDefaultPropertySource extends SystemEnvironmentPropertySource
-			implements OriginLookup<String> {
+	/**
+	 * 扩展的默认属性
+	 */
+	private static class ExtendedDefaultPropertySource extends SystemEnvironmentPropertySource implements OriginLookup<String> {
 
+		/**
+		 * 用于跟踪原始属性
+		 */
 		private final OriginTrackedCompositePropertySource sources;
 
 		private final List<String> names = new ArrayList<>();
 
 		ExtendedDefaultPropertySource(String name, PropertySource<?> propertySource) {
+			//设置map类型的属性
 			super(name, findMap(propertySource));
 			this.sources = new OriginTrackedCompositePropertySource(name);
 		}
@@ -456,7 +517,7 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 			if (propertySource instanceof MapPropertySource) {
 				return (Map<String, Object>) propertySource.getSource();
 			}
-			return new LinkedHashMap<String, Object>();
+			return new LinkedHashMap<>();
 		}
 
 		public CompositePropertySource getPropertySources() {
@@ -467,8 +528,11 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 			return this.names;
 		}
 
+		//添加属性，添加进OriginTrackedCompositePropertySource中
+		//添加类型是OriginTrackedMapPropertySource
 		public void add(PropertySource<?> source) {
 			// Only add map property sources added by boot, see gh-476
+			//只添加OriginTrackedMapPropertySource类型属性
 			if (source instanceof OriginTrackedMapPropertySource && !this.names.contains(source.getName())) {
 				this.sources.addPropertySource(source);
 				this.names.add(source.getName());

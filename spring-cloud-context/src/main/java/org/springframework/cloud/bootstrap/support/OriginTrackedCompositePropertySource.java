@@ -21,10 +21,16 @@ import org.springframework.boot.origin.OriginLookup;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.PropertySource;
 
+/**
+ * 用于跟踪原始属性，继承自复合属性，复合属性是指一个属性内部保存了多个属性的集合
+ *
+ * @author qings
+ */
 public class OriginTrackedCompositePropertySource extends CompositePropertySource implements OriginLookup<String> {
 
 	/**
 	 * Create a new {@code CompositePropertySource}.
+	 *
 	 * @param name the name of the property source
 	 */
 	public OriginTrackedCompositePropertySource(String name) {
@@ -34,7 +40,9 @@ public class OriginTrackedCompositePropertySource extends CompositePropertySourc
 	@Override
 	@SuppressWarnings("unchecked")
 	public Origin getOrigin(String name) {
+		//获取复合属性中所有的属性
 		for (PropertySource<?> propertySource : getPropertySources()) {
+			//如果是OriginLookup类型
 			if (propertySource instanceof OriginLookup) {
 				OriginLookup lookup = (OriginLookup) propertySource;
 				Origin origin = lookup.getOrigin(name);
