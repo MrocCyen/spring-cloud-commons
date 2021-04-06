@@ -36,28 +36,33 @@ public class RefreshScopeHealthIndicator extends AbstractHealthIndicator {
 
 	private ObjectProvider<RefreshScope> scope;
 
+	/**
+	 * 配置属性重新绑定器
+	 */
 	private ConfigurationPropertiesRebinder rebinder;
 
-	public RefreshScopeHealthIndicator(ObjectProvider<RefreshScope> scope, ConfigurationPropertiesRebinder rebinder) {
+	public RefreshScopeHealthIndicator(ObjectProvider<RefreshScope> scope,
+									   ConfigurationPropertiesRebinder rebinder) {
 		this.scope = scope;
 		this.rebinder = rebinder;
 	}
 
 	@Override
 	protected void doHealthCheck(Builder builder) throws Exception {
+		//获取RefreshScope
 		RefreshScope refreshScope = this.scope.getIfAvailable();
 		if (refreshScope != null) {
 			Map<String, Exception> errors = new HashMap<>(refreshScope.getErrors());
 			errors.putAll(this.rebinder.getErrors());
+			//没有错误
 			if (errors.isEmpty()) {
 				builder.up();
-			}
-			else {
+			} else {
+				//有错误
 				builder.down();
 				if (errors.size() == 1) {
 					builder.withException(errors.values().iterator().next());
-				}
-				else {
+				} else {
 					for (String name : errors.keySet()) {
 						builder.withDetail(name, errors.get(name));
 					}
