@@ -39,7 +39,10 @@ import org.springframework.core.env.Environment;
  *
  * @author Dave Syer
  * @author Olga Maciaszek-Sharma
- *
+ */
+
+/**
+ * 监听日志等级变化情况，并重新绑定
  */
 public class LoggingRebinder implements ApplicationListener<EnvironmentChangeEvent>, EnvironmentAware {
 
@@ -63,7 +66,14 @@ public class LoggingRebinder implements ApplicationListener<EnvironmentChangeEve
 		setLogLevels(system, this.environment);
 	}
 
+	/**
+	 * 设置日志级别
+	 *
+	 * @param system
+	 * @param environment
+	 */
 	protected void setLogLevels(LoggingSystem system, Environment environment) {
+		//获得日志级别
 		Map<String, String> levels = Binder.get(environment).bind("logging.level", STRING_STRING_MAP)
 				.orElseGet(Collections::emptyMap);
 		for (Entry<String, String> entry : levels.entrySet()) {
@@ -76,19 +86,22 @@ public class LoggingRebinder implements ApplicationListener<EnvironmentChangeEve
 			if (name.equalsIgnoreCase("root")) {
 				name = null;
 			}
+			//处理占位符
 			level = environment.resolvePlaceholders(level);
+			//设置日志级别
 			system.setLogLevel(name, resolveLogLevel(level));
-		}
-		catch (RuntimeException ex) {
+		} catch (RuntimeException ex) {
 			this.logger.error("Cannot set level: " + level + " for '" + name + "'");
 		}
 	}
 
 	private LogLevel resolveLogLevel(String level) {
 		String trimmedLevel = level.trim();
+		//如果是false，就设置成关闭
 		if ("false".equalsIgnoreCase(trimmedLevel)) {
 			return LogLevel.OFF;
 		}
+		//枚举转换
 		return LogLevel.valueOf(trimmedLevel.toUpperCase(Locale.ENGLISH));
 	}
 
