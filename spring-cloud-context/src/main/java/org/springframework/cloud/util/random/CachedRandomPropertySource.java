@@ -45,32 +45,36 @@ public class CachedRandomPropertySource extends PropertySource<PropertySource> {
 
 	@Override
 	public Object getProperty(String name) {
+		//不是cachedrandom.开头或者等于cachedrandom.，这直接返回null
 		if (!name.startsWith(PREFIX) || name.length() == PREFIX.length()) {
 			return null;
-		}
-		else {
+		} else {
 			if (logger.isTraceEnabled()) {
 				logger.trace("Generating random property for '" + name + "'");
 			}
 			// TO avoid any weirdness from the type or key including a "." we look for the
 			// last "." and substring everything instead of splitting on the "."
+			//获取cachedrandom.后续的值
 			String keyAndType = name.substring(PREFIX.length());
+			//最后一个点号的位置
 			int lastIndexOfDot = keyAndType.lastIndexOf(".");
 			if (lastIndexOfDot < 0) {
 				return null;
 			}
+			//lastIndexOfDot之前是key
 			String key = keyAndType.substring(0, lastIndexOfDot);
+			//lastIndexOfDot之后是type
 			String type = keyAndType.substring(lastIndexOfDot + 1);
 			if (StringUtils.hasText(key) && StringUtils.hasText(type)) {
 				return getRandom(type, key);
-			}
-			else {
+			} else {
 				return null;
 			}
 		}
 	}
 
 	private Object getRandom(String type, String key) {
+		//从缓存中获取key
 		Map<String, Object> randomValueCache = getCacheForKey(key);
 		if (logger.isDebugEnabled()) {
 			logger.debug("Looking in random cache for key " + key + " with type " + type);
@@ -88,6 +92,7 @@ public class CachedRandomPropertySource extends PropertySource<PropertySource> {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Looking in random cache for key: " + key);
 		}
+		//不存在key，则增加
 		return cache.computeIfAbsent(key, theKey -> {
 			if (logger.isDebugEnabled()) {
 				logger.debug("No cached value found for key: " + key);

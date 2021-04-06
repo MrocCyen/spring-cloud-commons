@@ -40,6 +40,7 @@ public class CachedRandomPropertySourceEnvironmentPostProcessor implements Envir
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
 		MutablePropertySources propertySources = environment.getPropertySources();
+		//获取random属性
 		PropertySource<?> propertySource = propertySources.get(RandomValuePropertySource.RANDOM_PROPERTY_SOURCE_NAME);
 		if (propertySource != null) {
 			PropertySource<?> existing = propertySources.get(CachedRandomPropertySource.NAME);
@@ -47,6 +48,7 @@ public class CachedRandomPropertySourceEnvironmentPostProcessor implements Envir
 				logger.trace("CachedRandomPropertySource already present");
 				return;
 			}
+			//添加名为cachedrandom的属性
 			propertySources.addLast(new CachedRandomPropertySource(propertySource));
 			logger.trace("CachedRandomPropertySource added to Environment");
 		}

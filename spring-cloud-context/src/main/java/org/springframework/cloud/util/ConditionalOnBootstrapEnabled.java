@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Conditional;
 import static org.springframework.cloud.util.PropertyUtils.BOOTSTRAP_ENABLED_PROPERTY;
 import static org.springframework.cloud.util.PropertyUtils.USE_LEGACY_PROCESSING_PROPERTY;
 
-@Target({ ElementType.TYPE, ElementType.METHOD })
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Conditional(ConditionalOnBootstrapEnabled.OnBootstrapEnabledCondition.class)

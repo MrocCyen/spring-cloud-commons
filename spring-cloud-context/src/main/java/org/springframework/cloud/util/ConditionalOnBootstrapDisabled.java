@@ -31,7 +31,7 @@ import static org.springframework.cloud.util.PropertyUtils.BOOTSTRAP_ENABLED_PRO
 import static org.springframework.cloud.util.PropertyUtils.MARKER_CLASS;
 import static org.springframework.cloud.util.PropertyUtils.USE_LEGACY_PROCESSING_PROPERTY;
 
-@Target({ ElementType.TYPE, ElementType.METHOD })
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Conditional(ConditionalOnBootstrapDisabled.OnBootstrapDisabledCondition.class)
