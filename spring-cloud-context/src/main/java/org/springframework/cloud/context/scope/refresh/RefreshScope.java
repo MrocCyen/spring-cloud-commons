@@ -71,6 +71,7 @@ public class RefreshScope extends GenericScope
 
 	private BeanDefinitionRegistry registry;
 
+	//渴望被初始化，默认是true
 	private boolean eager = true;
 
 	private int order = Ordered.LOWEST_PRECEDENCE - 100;
@@ -79,6 +80,7 @@ public class RefreshScope extends GenericScope
 	 * Creates a scope instance and gives it the default name: "refresh".
 	 */
 	public RefreshScope() {
+		//设置scope的名称是refresh
 		super.setName("refresh");
 	}
 
@@ -109,10 +111,12 @@ public class RefreshScope extends GenericScope
 
 	@Override
 	public void onApplicationEvent(ContextRefreshedEvent event) {
+		//上下文刷新的时候，初始化所有的scope
 		start(event);
 	}
 
 	public void start(ContextRefreshedEvent event) {
+		//渴望被初始化
 		if (event.getApplicationContext() == this.context && this.eager && this.registry != null) {
 			eagerlyInitialize();
 		}
@@ -121,7 +125,9 @@ public class RefreshScope extends GenericScope
 	private void eagerlyInitialize() {
 		for (String name : this.context.getBeanDefinitionNames()) {
 			BeanDefinition definition = this.registry.getBeanDefinition(name);
+			//scope和当前相等，并且不是懒加载
 			if (this.getName().equals(definition.getScope()) && !definition.isLazyInit()) {
+				//getBean进行初始化
 				Object bean = this.context.getBean(name);
 				if (bean != null) {
 					bean.getClass();

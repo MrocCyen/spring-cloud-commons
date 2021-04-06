@@ -76,6 +76,7 @@ public class GenericScope
 
 	private BeanLifecycleWrapperCache cache = new BeanLifecycleWrapperCache(new StandardScopeCache());
 
+	//scope的名字
 	private String name = "generic";
 
 	private ConfigurableListableBeanFactory beanFactory;
@@ -238,14 +239,19 @@ public class GenericScope
 
 	@Override
 	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
+		//遍历所有的bd
 		for (String name : registry.getBeanDefinitionNames()) {
 			BeanDefinition definition = registry.getBeanDefinition(name);
 			if (definition instanceof RootBeanDefinition) {
 				RootBeanDefinition root = (RootBeanDefinition) definition;
+				//如果bd的beanClass是ScopedProxyFactoryBean
 				if (root.getDecoratedDefinition() != null && root.hasBeanClass()
 						&& root.getBeanClass() == ScopedProxyFactoryBean.class) {
+					//如果当前scope的名称和bd的名称相等
 					if (getName().equals(root.getDecoratedDefinition().getBeanDefinition().getScope())) {
+						//重新设置beanClass
 						root.setBeanClass(LockedScopedProxyFactoryBean.class);
+						//添加构造函数参数，赋值this
 						root.getConstructorArgumentValues().addGenericArgumentValue(this);
 						// surprising that a scoped proxy bean definition is not already
 						// marked as synthetic?
