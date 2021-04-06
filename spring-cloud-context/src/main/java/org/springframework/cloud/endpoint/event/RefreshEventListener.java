@@ -38,8 +38,10 @@ public class RefreshEventListener implements SmartApplicationListener {
 
 	private static Log log = LogFactory.getLog(RefreshEventListener.class);
 
+	//想下文刷新器
 	private ContextRefresher refresh;
 
+	//标志环境是否已经准备好了
 	private AtomicBoolean ready = new AtomicBoolean(false);
 
 	public RefreshEventListener(ContextRefresher refresh) {
@@ -48,27 +50,32 @@ public class RefreshEventListener implements SmartApplicationListener {
 
 	@Override
 	public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
+		//只支持ApplicationReadyEvent和RefreshEvent事件
 		return ApplicationReadyEvent.class.isAssignableFrom(eventType)
 				|| RefreshEvent.class.isAssignableFrom(eventType);
 	}
 
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
+		//分别处理ApplicationReadyEvent和RefreshEvent事件
 		if (event instanceof ApplicationReadyEvent) {
 			handle((ApplicationReadyEvent) event);
-		}
-		else if (event instanceof RefreshEvent) {
+		} else if (event instanceof RefreshEvent) {
 			handle((RefreshEvent) event);
 		}
 	}
 
 	public void handle(ApplicationReadyEvent event) {
+		//直接设置属性值为true
 		this.ready.compareAndSet(false, true);
 	}
 
 	public void handle(RefreshEvent event) {
-		if (this.ready.get()) { // don't handle events before app is ready
+		// don't handle events before app is ready
+		//必须环境已经准备好了才进行处理RefreshEvent事件
+		if (this.ready.get()) {
 			log.debug("Event received " + event.getEventDesc());
+			//刷新上下文
 			Set<String> keys = this.refresh.refresh();
 			log.info("Refresh keys changed: " + keys);
 		}
