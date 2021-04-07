@@ -124,6 +124,7 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 			event.getSpringApplication().addListeners(new CloseContextOnFailureApplicationListener(context));
 		}
 
+		//处理父级上下文
 		apply(context, event.getSpringApplication(), environment);
 	}
 
@@ -348,13 +349,18 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 	@SuppressWarnings("unchecked")
 	private void apply(ConfigurableApplicationContext context, SpringApplication application,
 					   ConfigurableEnvironment environment) {
+		//包含启动标志配置类，直接返回
 		if (application.getAllSources().contains(BootstrapMarkerConfiguration.class)) {
 			return;
 		}
+		//添加source
 		application.addPrimarySources(Arrays.asList(BootstrapMarkerConfiguration.class));
+		//获取当前应用程序中所有的ApplicationContextInitializer
 		@SuppressWarnings("rawtypes")
 		Set target = new LinkedHashSet<>(application.getInitializers());
+		//添加父级上下文中的ApplicationContextInitializer
 		target.addAll(getOrderedBeansOfType(context, ApplicationContextInitializer.class));
+		//target中包含父级和当前级的ApplicationContextInitializer，并设置给当前应用程序
 		application.setInitializers(target);
 		addBootstrapDecryptInitializer(application);
 	}
@@ -440,8 +446,8 @@ public class BootstrapApplicationListener implements ApplicationListener<Applica
 			//重新排序属性
 			reorderSources(context.getEnvironment());
 			//代理给ParentContextApplicationContextInitializer进行处理
-			//1、设置context的parent为this.parent
-			//2、
+			//1、设置context的parent为启动上下文
+			//2、给context增加一个EventPublisher，接受ContextRefreshedEvent事件，发送ParentContextAvailableEvent事件
 			new ParentContextApplicationContextInitializer(this.parent).initialize(context);
 		}
 
