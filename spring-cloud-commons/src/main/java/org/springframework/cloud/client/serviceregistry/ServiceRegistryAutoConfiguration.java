@@ -26,6 +26,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
+ * 服务注册EndPoint，ServiceRegistryEndpoint主要用于设置和获取服务实例的状态值
+ *
  * @author Spencer Gibb
  */
 @Configuration(proxyBeanMethods = false)
@@ -35,6 +37,7 @@ public class ServiceRegistryAutoConfiguration {
 	@ConditionalOnClass(Endpoint.class)
 	protected class ServiceRegistryEndpointConfiguration {
 
+		//当前上下文的服务实例
 		@Autowired(required = false)
 		private Registration registration;
 

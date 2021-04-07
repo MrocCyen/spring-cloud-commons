@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * @author Spencer Gibb
  */
+//用于配置属性
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(AutoServiceRegistrationProperties.class)
 @ConditionalOnProperty(value = "spring.cloud.service-registry.auto-registration.enabled", matchIfMissing = true)

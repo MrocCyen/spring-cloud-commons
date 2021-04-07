@@ -26,19 +26,24 @@ import org.springframework.context.annotation.Import;
 /**
  * @author Spencer Gibb
  */
+//AutoServiceRegistration自动配置类
 @Configuration(proxyBeanMethods = false)
+//将属性放入context中
 @Import(AutoServiceRegistrationConfiguration.class)
 @ConditionalOnProperty(value = "spring.cloud.service-registry.auto-registration.enabled", matchIfMissing = true)
 public class AutoServiceRegistrationAutoConfiguration {
 
+	//AutoServiceRegistration实例
 	@Autowired(required = false)
 	private AutoServiceRegistration autoServiceRegistration;
 
+	//自动服务注册属性
 	@Autowired
 	private AutoServiceRegistrationProperties properties;
 
 	@PostConstruct
 	protected void init() {
+		//没有AutoServiceRegistration，并且设置了failFast为true，则直接异常
 		if (this.autoServiceRegistration == null && this.properties.isFailFast()) {
 			throw new IllegalStateException(
 					"Auto Service Registration has " + "been requested, but there is no AutoServiceRegistration bean");

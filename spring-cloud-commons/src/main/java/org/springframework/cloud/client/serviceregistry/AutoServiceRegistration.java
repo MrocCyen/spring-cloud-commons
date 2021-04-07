@@ -19,6 +19,7 @@ package org.springframework.cloud.client.serviceregistry;
 /**
  * @author Spencer Gibb
  */
+//自动服务注册标记接口
 public interface AutoServiceRegistration {
 
 }

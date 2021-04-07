@@ -30,6 +30,7 @@ import org.springframework.util.Assert;
  *
  * @author Spencer Gibb
  */
+//ServiceRegistryEndpoint主要用于设置和获取服务实例的状态值
 @SuppressWarnings("unchecked")
 @Endpoint(id = "serviceregistry")
 public class ServiceRegistryEndpoint {

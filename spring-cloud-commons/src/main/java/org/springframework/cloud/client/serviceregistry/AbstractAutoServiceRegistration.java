@@ -38,21 +38,26 @@ import org.springframework.core.env.Environment;
 /**
  * Lifecycle methods that may be useful and common to {@link ServiceRegistry}
  * implementations.
- *
+ * <p>
  * TODO: Document the lifecycle.
  *
  * @param <R> Registration type passed to the {@link ServiceRegistry}.
  * @author Spencer Gibb
  */
+//AutoServiceRegistration的框架实现类
+//实现ApplicationListener
 public abstract class AbstractAutoServiceRegistration<R extends Registration>
 		implements AutoServiceRegistration, ApplicationContextAware, ApplicationListener<WebServerInitializedEvent> {
 
 	private static final Log logger = LogFactory.getLog(AbstractAutoServiceRegistration.class);
 
+	//服务注册
 	private final ServiceRegistry<R> serviceRegistry;
 
+	//自动启动
 	private boolean autoStartup = true;
 
+	//标记是否已经开始运行了
 	private AtomicBoolean running = new AtomicBoolean(false);
 
 	private int order = 0;
@@ -61,8 +66,10 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 
 	private Environment environment;
 
+	//端口
 	private AtomicInteger port = new AtomicInteger(0);
 
+	//AutoServiceRegistration的属性
 	private AutoServiceRegistrationProperties properties;
 
 	@Deprecated
@@ -71,7 +78,7 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 	}
 
 	protected AbstractAutoServiceRegistration(ServiceRegistry<R> serviceRegistry,
-			AutoServiceRegistrationProperties properties) {
+											  AutoServiceRegistrationProperties properties) {
 		this.serviceRegistry = serviceRegistry;
 		this.properties = properties;
 	}
@@ -80,6 +87,7 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 		return this.context;
 	}
 
+	//ApplicationListener的实现
 	@Override
 	@SuppressWarnings("deprecation")
 	public void onApplicationEvent(WebServerInitializedEvent event) {
@@ -94,10 +102,13 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 				return;
 			}
 		}
+		//设置port
 		this.port.compareAndSet(0, event.getWebServer().getPort());
+		//
 		this.start();
 	}
 
+	//ApplicationContextAware实现
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.context = applicationContext;
