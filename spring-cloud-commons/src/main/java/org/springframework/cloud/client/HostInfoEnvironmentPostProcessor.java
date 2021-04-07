@@ -36,8 +36,10 @@ import org.springframework.core.env.MapPropertySource;
  */
 public class HostInfoEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
 
-	// Before ConfigFileApplicationListener
-	private int order = ConfigFileApplicationListener.DEFAULT_ORDER - 1;
+	/**
+	 * Before ConfigFileApplicationListener
+	 */
+	private final int order = ConfigFileApplicationListener.DEFAULT_ORDER - 1;
 
 	@Override
 	public int getOrder() {
@@ -47,9 +49,12 @@ public class HostInfoEnvironmentPostProcessor implements EnvironmentPostProcesso
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
 		InetUtils.HostInfo hostInfo = getFirstNonLoopbackHostInfo(environment);
+
 		LinkedHashMap<String, Object> map = new LinkedHashMap<>();
 		map.put("spring.cloud.client.hostname", hostInfo.getHostname());
 		map.put("spring.cloud.client.ip-address", hostInfo.getIpAddress());
+
+		//添加名为springCloudClientHostInfo的MapPropertySource属性
 		MapPropertySource propertySource = new MapPropertySource("springCloudClientHostInfo", map);
 		environment.getPropertySources().addLast(propertySource);
 	}
