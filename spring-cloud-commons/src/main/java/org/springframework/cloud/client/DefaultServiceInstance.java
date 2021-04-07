@@ -28,6 +28,7 @@ import java.util.Objects;
  * @author Tim Ysewyn
  * @author Charu Covindane
  */
+//默认的服务实例实现
 public class DefaultServiceInstance implements ServiceInstance {
 
 	private String instanceId;
@@ -46,14 +47,14 @@ public class DefaultServiceInstance implements ServiceInstance {
 
 	/**
 	 * @param instanceId the id of the instance.
-	 * @param serviceId the id of the service.
-	 * @param host the host where the service instance can be found.
-	 * @param port the port on which the service is running.
-	 * @param secure indicates whether or not the connection needs to be secure.
-	 * @param metadata a map containing metadata.
+	 * @param serviceId  the id of the service.
+	 * @param host       the host where the service instance can be found.
+	 * @param port       the port on which the service is running.
+	 * @param secure     indicates whether or not the connection needs to be secure.
+	 * @param metadata   a map containing metadata.
 	 */
 	public DefaultServiceInstance(String instanceId, String serviceId, String host, int port, boolean secure,
-			Map<String, String> metadata) {
+								  Map<String, String> metadata) {
 		this.instanceId = instanceId;
 		this.serviceId = serviceId;
 		this.host = host;
@@ -64,10 +65,10 @@ public class DefaultServiceInstance implements ServiceInstance {
 
 	/**
 	 * @param instanceId the id of the instance.
-	 * @param serviceId the id of the service.
-	 * @param host the host where the service instance can be found.
-	 * @param port the port on which the service is running.
-	 * @param secure indicates whether or not the connection needs to be secure.
+	 * @param serviceId  the id of the service.
+	 * @param host       the host where the service instance can be found.
+	 * @param port       the port on which the service is running.
+	 * @param secure     indicates whether or not the connection needs to be secure.
 	 */
 	public DefaultServiceInstance(String instanceId, String serviceId, String host, int port, boolean secure) {
 		this(instanceId, serviceId, host, port, secure, new LinkedHashMap<>());
@@ -78,6 +79,7 @@ public class DefaultServiceInstance implements ServiceInstance {
 
 	/**
 	 * Creates a URI from the given ServiceInstance's host:port.
+	 *
 	 * @param instance the ServiceInstance.
 	 * @return URI of the form (secure)?https:http + "host:port".
 	 */

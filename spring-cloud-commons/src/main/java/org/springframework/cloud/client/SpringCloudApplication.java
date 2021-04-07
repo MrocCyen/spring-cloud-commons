@@ -39,7 +39,9 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
+//springboot注解
 @SpringBootApplication
+//服务发现注解
 @EnableDiscoveryClient
 public @interface SpringCloudApplication {
 
