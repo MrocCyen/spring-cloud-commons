@@ -139,13 +139,17 @@ public class PropertySourceBootstrapConfiguration
 			}
 			//插入自定义属性
 			insertPropertySources(propertySources, composite);
+			//重新初始化日志系统
 			reinitializeLoggingSystem(environment, logConfig, logFile);
+			//设置日志级别
 			setLogLevels(applicationContext, environment);
+			//处理profile
 			handleIncludedProfiles(environment);
 		}
 	}
 
-	private void reinitializeLoggingSystem(ConfigurableEnvironment environment, String oldLogConfig,
+	private void reinitializeLoggingSystem(ConfigurableEnvironment environment,
+										   String oldLogConfig,
 										   LogFile oldLogFile) {
 		Map<String, Object> props = Binder.get(environment).bind("logging", Bindable.mapOf(String.class, Object.class))
 				.orElseGet(Collections::emptyMap);
@@ -171,9 +175,15 @@ public class PropertySourceBootstrapConfiguration
 		rebinder.setEnvironment(environment);
 		// We can't fire the event in the ApplicationContext here (too early), but we can
 		// create our own listener and poke it (it doesn't need the key changes)
-		rebinder.onApplicationEvent(new EnvironmentChangeEvent(applicationContext, Collections.<String>emptySet()));
+		//发布环境改变事件
+		//日志改变
+		rebinder.onApplicationEvent(new EnvironmentChangeEvent(applicationContext, Collections.emptySet()));
 	}
 
+	/**
+	 * @param propertySources 当前属性集合
+	 * @param composite       自定义属性集合
+	 */
 	private void insertPropertySources(MutablePropertySources propertySources, List<PropertySource<?>> composite) {
 		MutablePropertySources incoming = new MutablePropertySources();
 		List<PropertySource<?>> reversedComposite = new ArrayList<>(composite);
@@ -193,6 +203,10 @@ public class PropertySourceBootstrapConfiguration
 		//不允许覆盖
 		//或者
 		//允许覆盖系统属性且不是最低优先级
+		//isAllowOverride默认是true
+		//isOverrideNone默认是false
+		//isOverrideSystemProperties默认是true
+		//默认会进入这个分支
 		if (!remoteProperties.isAllowOverride()
 				|| (!remoteProperties.isOverrideNone() && remoteProperties.isOverrideSystemProperties())) {
 			for (PropertySource<?> p : reversedComposite) {
@@ -200,23 +214,31 @@ public class PropertySourceBootstrapConfiguration
 			}
 			return;
 		}
+		//优先级最低，不能覆盖其他属性
 		if (remoteProperties.isOverrideNone()) {
 			for (PropertySource<?> p : composite) {
+				//添加到末尾
 				propertySources.addLast(p);
 			}
 			return;
 		}
+		//如果原来属性集合包括系统属性
 		if (propertySources.contains(SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME)) {
+			//不能覆盖系统属性
 			if (!remoteProperties.isOverrideSystemProperties()) {
 				for (PropertySource<?> p : reversedComposite) {
+					//添加到系统属性之后
 					propertySources.addAfter(SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME, p);
 				}
 			} else {
+				//能覆盖系统属性
 				for (PropertySource<?> p : composite) {
+					//添加到系统属性之前
 					propertySources.addBefore(SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME, p);
 				}
 			}
 		} else {
+			//不包含，添加到最后
 			for (PropertySource<?> p : composite) {
 				propertySources.addLast(p);
 			}
@@ -237,14 +259,19 @@ public class PropertySourceBootstrapConfiguration
 	}
 
 	private void handleIncludedProfiles(ConfigurableEnvironment environment) {
+		//includeProfiles
 		Set<String> includeProfiles = new TreeSet<>();
 		for (PropertySource<?> propertySource : environment.getPropertySources()) {
+			//获取环境中的profile
 			addIncludedProfilesTo(includeProfiles, propertySource);
 		}
+
+		//activeProfiles
 		List<String> activeProfiles = new ArrayList<>();
 		Collections.addAll(activeProfiles, environment.getActiveProfiles());
 
 		// If it's already accepted we assume the order was set intentionally
+		//includeProfiles移除活动的profile
 		includeProfiles.removeAll(activeProfiles);
 		if (includeProfiles.isEmpty()) {
 			return;
@@ -256,15 +283,19 @@ public class PropertySourceBootstrapConfiguration
 		environment.setActiveProfiles(activeProfiles.toArray(new String[activeProfiles.size()]));
 	}
 
+	/**
+	 * @param profiles       profiles
+	 * @param propertySource 原始属性
+	 * @return profiles
+	 */
 	private Set<String> addIncludedProfilesTo(Set<String> profiles, PropertySource<?> propertySource) {
+		//组合属性
 		if (propertySource instanceof CompositePropertySource) {
-			for (PropertySource<?> nestedPropertySource : ((CompositePropertySource) propertySource)
-					.getPropertySources()) {
+			for (PropertySource<?> nestedPropertySource : ((CompositePropertySource) propertySource).getPropertySources()) {
 				addIncludedProfilesTo(profiles, nestedPropertySource);
 			}
 		} else {
-			Collections.addAll(profiles, getProfilesForValue(
-					propertySource.getProperty(ConfigFileApplicationListener.INCLUDE_PROFILES_PROPERTY)));
+			Collections.addAll(profiles, getProfilesForValue(propertySource.getProperty(ConfigFileApplicationListener.INCLUDE_PROFILES_PROPERTY)));
 		}
 		return profiles;
 	}
