@@ -55,8 +55,11 @@ import org.springframework.util.StringUtils;
 import static org.springframework.core.env.StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME;
 
 /**
+ * 自定义加载配置，通过实现PropertySourceLocator
+ */
+
+/**
  * @author Dave Syer
- *
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(PropertySourceBootstrapProperties.class)
@@ -65,6 +68,7 @@ public class PropertySourceBootstrapConfiguration
 
 	/**
 	 * Bootstrap property source name.
+	 * 启动属性的名称，bootstrapProperties
 	 */
 	public static final String BOOTSTRAP_PROPERTY_SOURCE_NAME = BootstrapApplicationListener.BOOTSTRAP_PROPERTY_SOURCE_NAME
 			+ "Properties";
@@ -73,6 +77,9 @@ public class PropertySourceBootstrapConfiguration
 
 	private int order = Ordered.HIGHEST_PRECEDENCE + 10;
 
+	/**
+	 * 属性加载器，用户自己实现
+	 */
 	@Autowired(required = false)
 	private List<PropertySourceLocator> propertySourceLocators = new ArrayList<>();
 
@@ -88,21 +95,27 @@ public class PropertySourceBootstrapConfiguration
 	@Override
 	public void initialize(ConfigurableApplicationContext applicationContext) {
 		List<PropertySource<?>> composite = new ArrayList<>();
+		//排序
 		AnnotationAwareOrderComparator.sort(this.propertySourceLocators);
 		boolean empty = true;
+		//当前环境
 		ConfigurableEnvironment environment = applicationContext.getEnvironment();
+		//遍历propertySourceLocators
 		for (PropertySourceLocator locator : this.propertySourceLocators) {
+			//用户自己实现的属性加载器
 			Collection<PropertySource<?>> source = locator.locateCollection(environment);
 			if (source == null || source.size() == 0) {
 				continue;
 			}
 			List<PropertySource<?>> sourceList = new ArrayList<>();
 			for (PropertySource<?> p : source) {
+				//是EnumerablePropertySource
 				if (p instanceof EnumerablePropertySource) {
+					//使用BootstrapPropertySource进行代理，名称为bootstrapProperties-p.getName()
 					EnumerablePropertySource<?> enumerable = (EnumerablePropertySource<?>) p;
 					sourceList.add(new BootstrapPropertySource<>(enumerable));
-				}
-				else {
+				} else {
+					//使用SimpleBootstrapPropertySource代理，名称为bootstrapProperties-p.getName()
 					sourceList.add(new SimpleBootstrapPropertySource(p));
 				}
 			}
@@ -110,15 +123,21 @@ public class PropertySourceBootstrapConfiguration
 			composite.addAll(sourceList);
 			empty = false;
 		}
+		//存在自定义属性
 		if (!empty) {
+			//获取当前所有的属性集合
 			MutablePropertySources propertySources = environment.getPropertySources();
+			//获取日志配置
 			String logConfig = environment.resolvePlaceholders("${logging.config:}");
+			//获取log信息
 			LogFile logFile = LogFile.get(environment);
 			for (PropertySource<?> p : environment.getPropertySources()) {
+				//移除bootstrapProperties开头的属性集合
 				if (p.getName().startsWith(BOOTSTRAP_PROPERTY_SOURCE_NAME)) {
 					propertySources.remove(p.getName());
 				}
 			}
+			//插入自定义属性
 			insertPropertySources(propertySources, composite);
 			reinitializeLoggingSystem(environment, logConfig, logFile);
 			setLogLevels(applicationContext, environment);
@@ -127,7 +146,7 @@ public class PropertySourceBootstrapConfiguration
 	}
 
 	private void reinitializeLoggingSystem(ConfigurableEnvironment environment, String oldLogConfig,
-			LogFile oldLogFile) {
+										   LogFile oldLogFile) {
 		Map<String, Object> props = Binder.get(environment).bind("logging", Bindable.mapOf(String.class, Object.class))
 				.orElseGet(Collections::emptyMap);
 		if (!props.isEmpty()) {
@@ -141,8 +160,7 @@ public class PropertySourceBootstrapConfiguration
 				system.cleanUp();
 				system.beforeInitialize();
 				system.initialize(new LoggingInitializationContext(environment), logConfig, logFile);
-			}
-			catch (Exception ex) {
+			} catch (Exception ex) {
 				PropertySourceBootstrapConfiguration.logger.warn("Error opening logging config file " + logConfig, ex);
 			}
 		}
@@ -167,8 +185,14 @@ public class PropertySourceBootstrapConfiguration
 		for (PropertySource<?> p : reversedComposite) {
 			incoming.addFirst(p);
 		}
+		//incoming和reversedComposite是逆序的
 		PropertySourceBootstrapProperties remoteProperties = new PropertySourceBootstrapProperties();
+		//environment()方法进行了反序操作，使得构造的环境是正序的
 		Binder.get(environment(incoming)).bind("spring.cloud.config", Bindable.ofInstance(remoteProperties));
+
+		//不允许覆盖
+		//或者
+		//允许覆盖系统属性且不是最低优先级
 		if (!remoteProperties.isAllowOverride()
 				|| (!remoteProperties.isOverrideNone() && remoteProperties.isOverrideSystemProperties())) {
 			for (PropertySource<?> p : reversedComposite) {
@@ -187,14 +211,12 @@ public class PropertySourceBootstrapConfiguration
 				for (PropertySource<?> p : reversedComposite) {
 					propertySources.addAfter(SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME, p);
 				}
-			}
-			else {
+			} else {
 				for (PropertySource<?> p : composite) {
 					propertySources.addBefore(SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME, p);
 				}
 			}
-		}
-		else {
+		} else {
 			for (PropertySource<?> p : composite) {
 				propertySources.addLast(p);
 			}
@@ -204,9 +226,11 @@ public class PropertySourceBootstrapConfiguration
 	private Environment environment(MutablePropertySources incoming) {
 		StandardEnvironment environment = new StandardEnvironment();
 		for (PropertySource<?> source : environment.getPropertySources()) {
+			//environment清空
 			environment.getPropertySources().remove(source.getName());
 		}
 		for (PropertySource<?> source : incoming) {
+			//反序添加，和原来一样
 			environment.getPropertySources().addLast(source);
 		}
 		return environment;
@@ -238,8 +262,7 @@ public class PropertySourceBootstrapConfiguration
 					.getPropertySources()) {
 				addIncludedProfilesTo(profiles, nestedPropertySource);
 			}
-		}
-		else {
+		} else {
 			Collections.addAll(profiles, getProfilesForValue(
 					propertySource.getProperty(ConfigFileApplicationListener.INCLUDE_PROFILES_PROPERTY)));
 		}

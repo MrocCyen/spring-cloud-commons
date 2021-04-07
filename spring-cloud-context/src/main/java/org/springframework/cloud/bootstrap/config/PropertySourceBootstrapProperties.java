@@ -30,6 +30,7 @@ public class PropertySourceBootstrapProperties {
 	 * Flag to indicate that the external properties should override system properties.
 	 * Default true.
 	 */
+	//覆盖系统属性，true表示允许覆盖
 	private boolean overrideSystemProperties = true;
 
 	/**
@@ -37,6 +38,7 @@ public class PropertySourceBootstrapProperties {
 	 * systemPropertiesOverride} can be used. Set to false to prevent users from changing
 	 * the default accidentally. Default true.
 	 */
+	//允许覆盖，true表示允许覆盖
 	private boolean allowOverride = true;
 
 	/**
@@ -44,6 +46,7 @@ public class PropertySourceBootstrapProperties {
 	 * true, external properties should take lowest priority and should not override any
 	 * existing property sources (including local config files). Default false.
 	 */
+	//表示覆盖的高优先级，true表示最低优先级
 	private boolean overrideNone = false;
 
 	public boolean isOverrideNone() {
