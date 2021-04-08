@@ -57,7 +57,7 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 	//自动启动
 	private boolean autoStartup = true;
 
-	//标记是否已经开始运行了
+	//标记是否已经开始运行了，true表示正在运行
 	private AtomicBoolean running = new AtomicBoolean(false);
 
 	private int order = 0;
@@ -104,7 +104,7 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 		}
 		//设置port
 		this.port.compareAndSet(0, event.getWebServer().getPort());
-		//
+		//启动注册
 		this.start();
 	}
 
@@ -130,6 +130,7 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 	}
 
 	public void start() {
+		//不可用，直接退出
 		if (!isEnabled()) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Discovery Lifecycle disabled. Not starting");
@@ -139,13 +140,19 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 
 		// only initialize if nonSecurePort is greater than 0 and it isn't already running
 		// because of containerPortInitializer below
+		//没有运行
 		if (!this.running.get()) {
+			//发布实例预注册事件
 			this.context.publishEvent(new InstancePreRegisteredEvent(this, getRegistration()));
+			//注册服务实例
 			register();
+			//注册服务实例管理
 			if (shouldRegisterManagement()) {
 				registerManagement();
 			}
+			//发布实例已注册事件
 			this.context.publishEvent(new InstanceRegisteredEvent<>(this, getConfiguration()));
+			//设置为正在运行
 			this.running.compareAndSet(false, true);
 		}
 
@@ -155,27 +162,33 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 	 * @return Whether the management service should be registered with the
 	 * {@link ServiceRegistry}.
 	 */
+	//判断是否需要注册服务实例管理
 	protected boolean shouldRegisterManagement() {
+		//设置了参数registerManagement为true
 		if (this.properties == null || this.properties.isRegisterManagement()) {
 			return getManagementPort() != null && ManagementServerPortUtils.isDifferent(this.context);
 		}
+		//默认不注册
 		return false;
 	}
 
 	/**
 	 * @return The object used to configure the registration.
 	 */
+	//服务实例的配置信息
 	@Deprecated
 	protected abstract Object getConfiguration();
 
 	/**
 	 * @return True, if this is enabled.
 	 */
+	//子类实现，是否可用，true才会执行start函数
 	protected abstract boolean isEnabled();
 
 	/**
 	 * @return The serviceId of the Management Service.
 	 */
+	//管理服务的服务id
 	@Deprecated
 	protected String getManagementServiceId() {
 		// TODO: configurable management suffix
@@ -186,6 +199,7 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 	 * @return The service name of the Management Service.
 	 */
 	@Deprecated
+	//管理服务的服务名称
 	protected String getManagementServiceName() {
 		// TODO: configurable management suffix
 		return getAppName() + ":management";
@@ -202,11 +216,13 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 	/**
 	 * @return The app name (currently the spring.application.name property).
 	 */
+	//当前应用程序的名称，默认是application
 	@Deprecated
 	protected String getAppName() {
 		return this.environment.getProperty("spring.application.name", "application");
 	}
 
+	//销毁时调用
 	@PreDestroy
 	public void destroy() {
 		stop();
@@ -232,13 +248,18 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 		return this.serviceRegistry;
 	}
 
+	//获取服务注册实例
+	//子类实现，产生服务实例对象
 	protected abstract R getRegistration();
 
+	//获取管理服务注册实例
+	//子类实现，产生注册管理服务
 	protected abstract R getManagementRegistration();
 
 	/**
 	 * Register the local service with the {@link ServiceRegistry}.
 	 */
+	//注册服务实例
 	protected void register() {
 		this.serviceRegistry.register(getRegistration());
 	}
@@ -246,6 +267,7 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 	/**
 	 * Register the local management service with the {@link ServiceRegistry}.
 	 */
+	//注册管理服务
 	protected void registerManagement() {
 		R registration = getManagementRegistration();
 		if (registration != null) {
@@ -272,10 +294,13 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 
 	public void stop() {
 		if (this.getRunning().compareAndSet(true, false) && isEnabled()) {
+			//注销
 			deregister();
+			//注销管理服务
 			if (shouldRegisterManagement()) {
 				deregisterManagement();
 			}
+			//关闭当前服务注册
 			this.serviceRegistry.close();
 		}
 	}
