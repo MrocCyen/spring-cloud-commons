@@ -31,6 +31,8 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.core.Ordered;
 
 /**
+ * DiscoveryClient 健康指标
+ *
  * @author Spencer Gibb
  * @author Chris Bono
  */
@@ -43,12 +45,13 @@ public class DiscoveryClientHealthIndicator
 
 	private final Log log = LogFactory.getLog(DiscoveryClientHealthIndicator.class);
 
+	//服务发现初始化标志
 	private AtomicBoolean discoveryInitialized = new AtomicBoolean(false);
 
 	private int order = Ordered.HIGHEST_PRECEDENCE;
 
 	public DiscoveryClientHealthIndicator(ObjectProvider<DiscoveryClient> discoveryClient,
-			DiscoveryClientHealthIndicatorProperties properties) {
+										  DiscoveryClientHealthIndicatorProperties properties) {
 		this.discoveryClient = discoveryClient;
 		this.properties = properties;
 	}
@@ -64,26 +67,25 @@ public class DiscoveryClientHealthIndicator
 	public Health health() {
 		Health.Builder builder = new Health.Builder();
 
+		//如果已经初始化
 		if (this.discoveryInitialized.get()) {
 			try {
 				DiscoveryClient client = this.discoveryClient.getIfAvailable();
 				String description = (this.properties.isIncludeDescription()) ? client.description() : "";
 
+				//查询所有服务的状态
 				if (properties.isUseServicesQuery()) {
 					List<String> services = client.getServices();
 					builder.status(new Status("UP", description)).withDetail("services", services);
-				}
-				else {
+				} else {
 					client.probe();
 					builder.status(new Status("UP", description));
 				}
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				this.log.error("Error", e);
 				builder.down(e);
 			}
-		}
-		else {
+		} else {
 			builder.status(new Status(Status.UNKNOWN.getCode(), "Discovery Client not initialized"));
 		}
 		return builder.build();

@@ -23,13 +23,16 @@ import org.springframework.boot.actuate.health.Health;
  *
  * @author Spencer Gibb
  */
+//用于DiscoveryClient实现类的健康指标接口
 public interface DiscoveryHealthIndicator {
 
+	//健康指标名称
 	String getName();
 
 	/**
 	 * @return An indication of health.
 	 */
+	//具体的健康指标
 	Health health();
 
 }

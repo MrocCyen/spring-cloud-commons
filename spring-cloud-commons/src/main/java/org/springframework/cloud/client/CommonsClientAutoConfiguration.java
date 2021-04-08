@@ -58,17 +58,19 @@ public class CommonsClientAutoConfiguration {
 	@ConditionalOnBlockingDiscoveryEnabled
 	protected static class DiscoveryLoadBalancerConfiguration {
 
+		//发现客户端健康指标配置
 		@Bean
 		@ConditionalOnDiscoveryHealthIndicatorEnabled
+		//上面这个注解相当于是@ConditionalOnProperty(value = "spring.cloud.discovery.client.health-indicator.enabled", matchIfMissing = true)
 		public DiscoveryClientHealthIndicator discoveryClientHealthIndicator(
 				ObjectProvider<DiscoveryClient> discoveryClient, DiscoveryClientHealthIndicatorProperties properties) {
 			return new DiscoveryClientHealthIndicator(discoveryClient, properties);
 		}
 
+		//发现客户端适配到CompositeHealthContributor
 		@Bean
-		@ConditionalOnProperty(value = "spring.cloud.discovery.client.composite-indicator.enabled",
-				matchIfMissing = true)
-		@ConditionalOnBean({ DiscoveryHealthIndicator.class })
+		@ConditionalOnProperty(value = "spring.cloud.discovery.client.composite-indicator.enabled", matchIfMissing = true)
+		@ConditionalOnBean({DiscoveryHealthIndicator.class})
 		public DiscoveryCompositeHealthContributor discoveryCompositeHealthContributor(
 				List<DiscoveryHealthIndicator> indicators) {
 			return new DiscoveryCompositeHealthContributor(indicators);

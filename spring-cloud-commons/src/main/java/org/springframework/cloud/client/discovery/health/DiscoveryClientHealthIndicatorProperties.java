@@ -25,8 +25,10 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
 @ConfigurationProperties("spring.cloud.discovery.client.health-indicator")
 public class DiscoveryClientHealthIndicatorProperties {
 
+	//是否开启监控指标
 	private boolean enabled = true;
 
+	//是否包含描述
 	private boolean includeDescription = false;
 
 	/**
@@ -35,6 +37,7 @@ public class DiscoveryClientHealthIndicatorProperties {
 	 * {@link DiscoveryClient#probe()}. This can be helpful in large deployments where the
 	 * number of services returned makes the operation unnecessarily heavy.
 	 */
+	//是否使用DiscoveryClient#getServices()进行健康指标检查
 	private boolean useServicesQuery = true;
 
 	public boolean isEnabled() {

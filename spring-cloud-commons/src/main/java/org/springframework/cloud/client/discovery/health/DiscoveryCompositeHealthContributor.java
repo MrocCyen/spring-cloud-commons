@@ -72,7 +72,7 @@ public class DiscoveryCompositeHealthContributor implements CompositeHealthContr
 	}
 
 	private HealthIndicator asHealthIndicator(DiscoveryHealthIndicator indicator) {
-		return (indicator != null) ? () -> indicator.health() : null;
+		return (indicator != null) ? indicator::health : null;
 	}
 
 }
