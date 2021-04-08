@@ -34,8 +34,9 @@ public class HeartbeatEvent extends ApplicationEvent {
 	/**
 	 * Creates a new event with a source (for example, a discovery client) and a value.
 	 * Neither parameter should be relied on to have specific content or format.
+	 *
 	 * @param source The source of the event.
-	 * @param state The value indicating state of the catalog.
+	 * @param state  The value indicating state of the catalog.
 	 */
 	public HeartbeatEvent(Object source, Object state) {
 		super(source);
@@ -48,6 +49,7 @@ public class HeartbeatEvent extends ApplicationEvent {
 	 * a hash. Implementations can provide information to help users visualize what is
 	 * going on in the catalog, but users should not rely on the content (since the
 	 * implementation of the underlying discovery might change).
+	 *
 	 * @return A value representing state of the service catalog.
 	 */
 	public Object getValue() {
