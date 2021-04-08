@@ -23,6 +23,7 @@ import java.util.Map;
  * Represents an instance of a service in a discovery system.
  * </p>
  * 表示一个服务实例
+ * 一个服务可能有多个实例，所以会存在多个实例id，但是这几个实例对应的服务id只有一个
  *
  * @author Spencer Gibb
  * @author Tim Ysewyn

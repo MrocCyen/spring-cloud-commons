@@ -29,29 +29,36 @@ import org.springframework.core.Ordered;
  * @author Olga Maciaszek-Sharma
  * @author Chris Bono
  */
+//规范服务发现
 public interface DiscoveryClient extends Ordered {
 
 	/**
 	 * Default order of the discovery client.
 	 */
+	//服务发现客户端的默认顺序
 	int DEFAULT_ORDER = 0;
 
 	/**
 	 * A human-readable description of the implementation, used in HealthIndicator.
+	 *
 	 * @return The description.
 	 */
 	String description();
 
 	/**
 	 * Gets all ServiceInstances associated with a particular serviceId.
+	 *
 	 * @param serviceId The serviceId to query.
 	 * @return A List of ServiceInstance.
 	 */
+	//根据服务id找到所有的实例id
+	//一个服务可能有多个实例，所以会存在多个实例id，但是这几个实例对应的服务id只有一个
 	List<ServiceInstance> getInstances(String serviceId);
 
 	/**
 	 * @return All known service IDs.
 	 */
+	//服务id的列表
 	List<String> getServices();
 
 	/**
@@ -63,12 +70,15 @@ public interface DiscoveryClient extends Ordered {
 	 * The default implementation simply calls {@link #getServices()} - client
 	 * implementations can override with a lighter weight operation if they choose to.
 	 */
+	//验证是否是有效和可以调用的
+	//没有抛出异常则代表是正常的
 	default void probe() {
 		getServices();
 	}
 
 	/**
 	 * Default implementation for getting order of discovery clients.
+	 *
 	 * @return order
 	 */
 	@Override

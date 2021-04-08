@@ -36,12 +36,14 @@ public interface ReactiveDiscoveryClient extends Ordered {
 
 	/**
 	 * A human-readable description of the implementation, used in HealthIndicator.
+	 *
 	 * @return The description.
 	 */
 	String description();
 
 	/**
 	 * Gets all ServiceInstances associated with a particular serviceId.
+	 *
 	 * @param serviceId The serviceId to query.
 	 * @return A List of ServiceInstance.
 	 */
@@ -67,6 +69,7 @@ public interface ReactiveDiscoveryClient extends Ordered {
 
 	/**
 	 * Default implementation for getting order of discovery clients.
+	 *
 	 * @return order
 	 */
 	@Override

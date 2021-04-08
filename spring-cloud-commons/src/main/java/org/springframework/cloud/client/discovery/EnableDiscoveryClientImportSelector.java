@@ -43,18 +43,22 @@ public class EnableDiscoveryClientImportSelector extends SpringFactoryImportSele
 		AnnotationAttributes attributes = AnnotationAttributes
 				.fromMap(metadata.getAnnotationAttributes(getAnnotationClass().getName(), true));
 
+		//获取autoRegister属性值
 		boolean autoRegister = attributes.getBoolean("autoRegister");
 
+		//允许自动注册
 		if (autoRegister) {
 			List<String> importsList = new ArrayList<>(Arrays.asList(imports));
+			//添加AutoServiceRegistrationConfiguration
 			importsList.add("org.springframework.cloud.client.serviceregistry.AutoServiceRegistrationConfiguration");
 			imports = importsList.toArray(new String[0]);
-		}
-		else {
+		} else {
+			//不允许自动注册
 			Environment env = getEnvironment();
 			if (ConfigurableEnvironment.class.isInstance(env)) {
 				ConfigurableEnvironment configEnv = (ConfigurableEnvironment) env;
 				LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+				//添加属性，关闭自动注册
 				map.put("spring.cloud.service-registry.auto-registration.enabled", false);
 				MapPropertySource propertySource = new MapPropertySource("springCloudDiscoveryClient", map);
 				configEnv.getPropertySources().addLast(propertySource);
@@ -70,6 +74,7 @@ public class EnableDiscoveryClientImportSelector extends SpringFactoryImportSele
 		return getEnvironment().getProperty("spring.cloud.discovery.enabled", Boolean.class, Boolean.TRUE);
 	}
 
+	//保证父级的selectImports不会抛异常
 	@Override
 	protected boolean hasDefaultFactory() {
 		return true;

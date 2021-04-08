@@ -48,12 +48,14 @@ public abstract class SpringFactoryImportSelector<T>
 
 	private ClassLoader beanClassLoader;
 
+	//注解类的class
 	private Class<T> annotationClass;
 
 	private Environment environment;
 
 	@SuppressWarnings("unchecked")
 	protected SpringFactoryImportSelector() {
+		//找出当前类修饰的注解
 		this.annotationClass = (Class<T>) GenericTypeResolver.resolveTypeArgument(this.getClass(),
 				SpringFactoryImportSelector.class);
 	}
@@ -63,6 +65,8 @@ public abstract class SpringFactoryImportSelector<T>
 		if (!isEnabled()) {
 			return new String[0];
 		}
+
+		//获取注解的属性值
 		AnnotationAttributes attributes = AnnotationAttributes
 				.fromMap(metadata.getAnnotationAttributes(this.annotationClass.getName(), true));
 
@@ -70,6 +74,7 @@ public abstract class SpringFactoryImportSelector<T>
 				+ " annotated with @" + getSimpleName() + "?");
 
 		// Find all possible auto configuration classes, filtering duplicates
+		//从META-INF/spring.factories文件中加载annotationClass
 		List<String> factories = new ArrayList<>(new LinkedHashSet<>(
 				SpringFactoriesLoader.loadFactoryNames(this.annotationClass, this.beanClassLoader)));
 
@@ -88,10 +93,13 @@ public abstract class SpringFactoryImportSelector<T>
 		return factories.toArray(new String[factories.size()]);
 	}
 
+	//是否有默认的工厂
+	//最好设置成true，不然只要META-INF/spring.factories不存在该注解，就会抛出异常
 	protected boolean hasDefaultFactory() {
 		return false;
 	}
 
+	//是否可以使用
 	protected abstract boolean isEnabled();
 
 	protected String getSimpleName() {

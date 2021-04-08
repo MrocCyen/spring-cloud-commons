@@ -48,8 +48,7 @@ public final class ManagementServerPortUtils {
 		try {
 			Class.forName(className);
 			hasClass = true;
-		}
-		catch (ClassNotFoundException e) {
+		} catch (ClassNotFoundException e) {
 			hasClass = false;
 		}
 		return hasClass;
@@ -78,8 +77,7 @@ public final class ManagementServerPortUtils {
 		try {
 			ManagementServerProperties properties = beanFactory.getBean(ManagementServerProperties.class);
 			return properties.getPort();
-		}
-		catch (NoSuchBeanDefinitionException ex) {
+		} catch (NoSuchBeanDefinitionException ex) {
 			return null;
 		}
 	}
@@ -114,16 +112,14 @@ public final class ManagementServerPortUtils {
 			ServerProperties serverProperties;
 			try {
 				serverProperties = beanFactory.getBean(ServerProperties.class);
-			}
-			catch (NoSuchBeanDefinitionException ex) {
+			} catch (NoSuchBeanDefinitionException ex) {
 				serverProperties = new ServerProperties();
 			}
 
 			ManagementServerProperties managementServerProperties;
 			try {
 				managementServerProperties = beanFactory.getBean(ManagementServerProperties.class);
-			}
-			catch (NoSuchBeanDefinitionException ex) {
+			} catch (NoSuchBeanDefinitionException ex) {
 				managementServerProperties = new ManagementServerProperties();
 			}
 
