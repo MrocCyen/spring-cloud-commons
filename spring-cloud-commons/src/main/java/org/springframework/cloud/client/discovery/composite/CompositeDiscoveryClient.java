@@ -32,8 +32,11 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
  * @author Biju Kunjummen
  * @author Olga Maciaszek-Sharma
  */
+//组合的发现客户端
+//代理里面每一个
 public class CompositeDiscoveryClient implements DiscoveryClient {
 
+	//保存每一个服务发现客户端
 	private final List<DiscoveryClient> discoveryClients;
 
 	public CompositeDiscoveryClient(List<DiscoveryClient> discoveryClients) {
@@ -46,6 +49,7 @@ public class CompositeDiscoveryClient implements DiscoveryClient {
 		return "Composite Discovery Client";
 	}
 
+	//遍历每一个发现客户端，然后根据服务id找到具体的服务实例
 	@Override
 	public List<ServiceInstance> getInstances(String serviceId) {
 		if (this.discoveryClients != null) {
@@ -59,6 +63,7 @@ public class CompositeDiscoveryClient implements DiscoveryClient {
 		return Collections.emptyList();
 	}
 
+	//获取所有的服务id
 	@Override
 	public List<String> getServices() {
 		LinkedHashSet<String> services = new LinkedHashSet<>();
