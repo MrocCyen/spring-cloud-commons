@@ -38,7 +38,6 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
  * @author Tim Ysewyn
  * @author Charu Covindane
  */
-
 @ConfigurationProperties(prefix = "spring.cloud.discovery.client.simple")
 public class SimpleDiscoveryProperties {
 

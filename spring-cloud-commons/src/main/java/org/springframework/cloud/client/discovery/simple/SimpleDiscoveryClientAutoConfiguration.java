@@ -37,7 +37,7 @@ import org.springframework.core.annotation.Order;
  * @author Charu Covindane
  */
 @Configuration(proxyBeanMethods = false)
-@AutoConfigureBefore({ CommonsClientAutoConfiguration.class })
+@AutoConfigureBefore({CommonsClientAutoConfiguration.class})
 public class SimpleDiscoveryClientAutoConfiguration implements ApplicationListener<WebServerInitializedEvent> {
 
 	private ServerProperties server;
