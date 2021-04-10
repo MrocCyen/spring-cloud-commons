@@ -44,6 +44,7 @@ import org.springframework.util.StreamUtils;
  * @author Olga Maciaszek-Sharma
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
+//重试请求拦截器
 public class RetryLoadBalancerInterceptor implements ClientHttpRequestInterceptor {
 
 	private static final Log LOG = LogFactory.getLog(RetryLoadBalancerInterceptor.class);

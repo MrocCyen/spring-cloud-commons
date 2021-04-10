@@ -73,6 +73,7 @@ public interface LoadBalancedRetryPolicy {
 	 * @param statusCode The HTTP status code.
 	 * @return True if a retry should be attempted; false to just return the response.
 	 */
+	//根据状态码判断是否需要重试
 	boolean retryableStatusCode(int statusCode);
 
 }

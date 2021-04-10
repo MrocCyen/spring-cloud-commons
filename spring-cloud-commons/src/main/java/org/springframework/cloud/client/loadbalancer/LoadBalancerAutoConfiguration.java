@@ -69,9 +69,6 @@ public class LoadBalancerAutoConfiguration {
 
 	/**
 	 * 针对每一个RestTemplate进行自定义处理
-	 *
-	 * @param restTemplateCustomizers 注入RestTemplate自定义处理器
-	 * @return SmartInitializingSingleton实现类
 	 */
 	@Bean
 	public SmartInitializingSingleton loadBalancedRestTemplateInitializerDeprecated(
@@ -87,9 +84,6 @@ public class LoadBalancerAutoConfiguration {
 
 	/**
 	 * 注入请求工厂，用于创建LoadBalancerRequest进行http请求
-	 *
-	 * @param loadBalancerClient 注入负载均衡客户端
-	 * @return 请求工厂
 	 */
 	@Bean
 	@ConditionalOnMissingBean
@@ -98,19 +92,31 @@ public class LoadBalancerAutoConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
+	//以下任何一个条件满足将生效：
+	//1、没有类org.springframework.retry.support.RetryTemplate
+	//2、spring.cloud.loadbalancer.retry.enabled=false
+	//</p>
+	// 也就是不存在重试机制的情况下生效！！！！！！！！
 	@Conditional(RetryMissingOrDisabledCondition.class)
 	static class LoadBalancerInterceptorConfig {
 
+		/**
+		 * 负载均请求衡拦截器
+		 */
 		@Bean
 		public LoadBalancerInterceptor loadBalancerInterceptor(LoadBalancerClient loadBalancerClient,
 		                                                       LoadBalancerRequestFactory requestFactory) {
 			return new LoadBalancerInterceptor(loadBalancerClient, requestFactory);
 		}
 
+		/**
+		 * RestTemplateCustomizer，用于给RestTemplate设置拦截器，LoadBalancerInterceptor
+		 */
 		@Bean
 		@ConditionalOnMissingBean
 		public RestTemplateCustomizer restTemplateCustomizer(final LoadBalancerInterceptor loadBalancerInterceptor) {
 			return restTemplate -> {
+				//给RestTemplate设置拦截器
 				List<ClientHttpRequestInterceptor> list = new ArrayList<>(restTemplate.getInterceptors());
 				list.add(loadBalancerInterceptor);
 				restTemplate.setInterceptors(list);
@@ -139,11 +145,15 @@ public class LoadBalancerAutoConfiguration {
 
 	/**
 	 * Auto configuration for retry mechanism.
+	 * 注入重试相关bean
 	 */
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(RetryTemplate.class)
 	public static class RetryAutoConfiguration {
 
+		/**
+		 * 注入重试工厂
+		 */
 		@Bean
 		@ConditionalOnMissingBean
 		public LoadBalancedRetryFactory loadBalancedRetryFactory() {
@@ -160,8 +170,12 @@ public class LoadBalancerAutoConfiguration {
 	@ConditionalOnClass(RetryTemplate.class)
 	@ConditionalOnBean(ReactiveLoadBalancer.Factory.class)
 	@ConditionalOnProperty(value = "spring.cloud.loadbalancer.retry.enabled", matchIfMissing = true)
+	//一堆的判断条件
 	public static class RetryInterceptorAutoConfiguration {
 
+		/**
+		 * RetryLoadBalancerInterceptor
+		 */
 		@Bean
 		@ConditionalOnMissingBean
 		public RetryLoadBalancerInterceptor loadBalancerInterceptor(LoadBalancerClient loadBalancerClient,
@@ -175,9 +189,9 @@ public class LoadBalancerAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		public RestTemplateCustomizer restTemplateCustomizer(
-				final RetryLoadBalancerInterceptor loadBalancerInterceptor) {
+		public RestTemplateCustomizer restTemplateCustomizer(final RetryLoadBalancerInterceptor loadBalancerInterceptor) {
 			return restTemplate -> {
+				//给restTemplate设置拦截器
 				List<ClientHttpRequestInterceptor> list = new ArrayList<>(restTemplate.getInterceptors());
 				list.add(loadBalancerInterceptor);
 				restTemplate.setInterceptors(list);

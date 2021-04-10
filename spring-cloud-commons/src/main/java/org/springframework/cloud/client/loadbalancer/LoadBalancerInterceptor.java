@@ -26,6 +26,8 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.util.Assert;
 
 /**
+ * 拦截客户端请求，可以进行扩展操作
+ *
  * @author Spencer Gibb
  * @author Dave Syer
  * @author Ryan Baxter
@@ -47,13 +49,27 @@ public class LoadBalancerInterceptor implements ClientHttpRequestInterceptor {
 		this(loadBalancer, new LoadBalancerRequestFactory(loadBalancer));
 	}
 
+	/**
+	 * 直接拦截请求
+	 *
+	 * @param request
+	 * @param body
+	 * @param execution
+	 * @return
+	 * @throws IOException
+	 */
 	@Override
-	public ClientHttpResponse intercept(final HttpRequest request, final byte[] body,
-			final ClientHttpRequestExecution execution) throws IOException {
+	public ClientHttpResponse intercept(final HttpRequest request,
+	                                    final byte[] body,
+	                                    final ClientHttpRequestExecution execution) throws IOException {
 		final URI originalUri = request.getURI();
 		String serviceName = originalUri.getHost();
 		Assert.state(serviceName != null, "Request URI does not contain a valid hostname: " + originalUri);
-		return this.loadBalancer.execute(serviceName, this.requestFactory.createRequest(request, body, execution));
+
+		//1、先调用LoadBalancerRequestFactory#createRequest获取LoadBalancerRequest，内部进行请求的转换
+		//2、在调用LoadBalancerClient#execute执行请求
+		LoadBalancerRequest<ClientHttpResponse> factoryRequest = this.requestFactory.createRequest(request, body, execution);
+		return this.loadBalancer.execute(serviceName, factoryRequest);
 	}
 
 }
