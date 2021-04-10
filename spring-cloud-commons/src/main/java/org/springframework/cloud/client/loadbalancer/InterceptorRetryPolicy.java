@@ -27,39 +27,50 @@ import org.springframework.retry.RetryPolicy;
  * @author Ryan Baxter
  * @author Olga Maciaszek-Sharma
  */
+//拦截请求失败时进行重试的策略
 public class InterceptorRetryPolicy implements RetryPolicy {
 
+	//http请求
 	private final HttpRequest request;
 
+	//负载均衡的重试策略
 	private final LoadBalancedRetryPolicy policy;
 
+	//服务选择器
 	private final ServiceInstanceChooser serviceInstanceChooser;
 
+	//服务名称
 	private final String serviceName;
 
 	/**
 	 * Creates a new retry policy.
-	 * @param request The request that will be retried.
-	 * @param policy The retry policy from the load balancer.
+	 *
+	 * @param request                The request that will be retried.
+	 * @param policy                 The retry policy from the load balancer.
 	 * @param serviceInstanceChooser The load balancer client.
-	 * @param serviceName The name of the service.
+	 * @param serviceName            The name of the service.
 	 */
-	public InterceptorRetryPolicy(HttpRequest request, LoadBalancedRetryPolicy policy,
-			ServiceInstanceChooser serviceInstanceChooser, String serviceName) {
+	public InterceptorRetryPolicy(HttpRequest request,
+	                              LoadBalancedRetryPolicy policy,
+	                              ServiceInstanceChooser serviceInstanceChooser,
+	                              String serviceName) {
 		this.request = request;
 		this.policy = policy;
 		this.serviceInstanceChooser = serviceInstanceChooser;
 		this.serviceName = serviceName;
 	}
 
+	//是否可以进行重试
 	@Override
 	public boolean canRetry(RetryContext context) {
 		LoadBalancedRetryContext lbContext = (LoadBalancedRetryContext) context;
+		//还没有重试过
 		if (lbContext.getRetryCount() == 0 && lbContext.getServiceInstance() == null) {
 			// We haven't even tried to make the request yet so return true so we do
 			lbContext.setServiceInstance(null);
 			return true;
 		}
+		//使用负载均衡策略进行判断，重试下一台服务器
 		return policy.canRetryNextServer(lbContext);
 	}
 

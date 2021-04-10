@@ -18,6 +18,7 @@ package org.springframework.cloud.client.loadbalancer;
 
 /**
  * Retry logic to use for the {@link LoadBalancerClient}.
+ * 负载均衡的重试策略
  *
  * @author Ryan Baxter
  */
@@ -26,31 +27,39 @@ public interface LoadBalancedRetryPolicy {
 	/**
 	 * Return true to retry the failed request on the same server. This method may be
 	 * called more than once when executing a single operation.
+	 *
 	 * @param context The context for the retry operation.
 	 * @return True to retry the failed request on the same server; false otherwise.
 	 */
+	//在当前服务器进行重试
 	boolean canRetrySameServer(LoadBalancedRetryContext context);
 
 	/**
 	 * Return true to retry the failed request on the next server from the load balancer.
 	 * This method may be called more than once when executing a single operation.
+	 *
 	 * @param context The context for the retry operation.
 	 * @return True to retry the failed request on the next server from the load balancer;
 	 * false otherwise.
 	 */
+	//在下一台服务器进行重试
 	boolean canRetryNextServer(LoadBalancedRetryContext context);
 
 	/**
 	 * Called when the retry operation has ended.
+	 *
 	 * @param context The context for the retry operation.
 	 */
+	//关闭重试操作
 	void close(LoadBalancedRetryContext context);
 
 	/**
 	 * Called when the execution fails.
-	 * @param context The context for the retry operation.
+	 *
+	 * @param context   The context for the retry operation.
 	 * @param throwable The throwable from the failed execution.
 	 */
+	//注册异常
 	void registerThrowable(LoadBalancedRetryContext context, Throwable throwable);
 
 	/**
@@ -60,6 +69,7 @@ public interface LoadBalancedRetryPolicy {
 	 * when an app is not available. Since HTTP clients do not throw an exception when a
 	 * <code>404</code> is returned, <code>retryableStatusCode</code> allows clients to
 	 * force a retry.
+	 *
 	 * @param statusCode The HTTP status code.
 	 * @return True if a retry should be attempted; false to just return the response.
 	 */

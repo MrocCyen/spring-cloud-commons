@@ -27,17 +27,21 @@ import org.springframework.retry.context.RetryContextSupport;
  * @author Ryan Baxter
  * @author Olga Maciaszek-Sharma
  */
+//负载均衡重试上下文
 public class LoadBalancedRetryContext extends RetryContextSupport {
 
 	private HttpRequest request;
 
+	//当前服务实例
 	private ServiceInstance serviceInstance;
 
+	//前一个服务实例
 	private ServiceInstance previousServiceInstance;
 
 	/**
 	 * Creates a new load-balanced context.
-	 * @param parent The parent context.
+	 *
+	 * @param parent  The parent context.
 	 * @param request The request that is being load-balanced.
 	 */
 	public LoadBalancedRetryContext(RetryContext parent, HttpRequest request) {
@@ -47,6 +51,7 @@ public class LoadBalancedRetryContext extends RetryContextSupport {
 
 	/**
 	 * Gets the request that is being load-balanced.
+	 *
 	 * @return The request that is being load-balanced.
 	 */
 	public HttpRequest getRequest() {
@@ -55,6 +60,7 @@ public class LoadBalancedRetryContext extends RetryContextSupport {
 
 	/**
 	 * Sets the request that is being load-balanced.
+	 *
 	 * @param request The request to be load balanced.
 	 */
 	public void setRequest(HttpRequest request) {
@@ -63,6 +69,7 @@ public class LoadBalancedRetryContext extends RetryContextSupport {
 
 	/**
 	 * Gets the service instance used during the retry.
+	 *
 	 * @return The service instance used during the retry.
 	 */
 	public ServiceInstance getServiceInstance() {
@@ -71,10 +78,13 @@ public class LoadBalancedRetryContext extends RetryContextSupport {
 
 	/**
 	 * Sets the service instance to use during the retry.
+	 *
 	 * @param serviceInstance The service instance to use during the retry.
 	 */
 	public void setServiceInstance(ServiceInstance serviceInstance) {
+		//设置当前服务实例给前一个实例
 		setPreviousServiceInstance(this.serviceInstance);
+		//设置当前服务实例的新值
 		this.serviceInstance = serviceInstance;
 	}
 

@@ -27,14 +27,23 @@ import org.springframework.core.style.ToStringCreator;
  */
 public class CompletionContext<RES, T, C> {
 
+	/**
+	 * 状态
+	 */
 	private final Status status;
 
+	/**
+	 * 异常
+	 */
 	private final Throwable throwable;
 
+	//这里T通常指的是ServiceInstance
 	private final Response<T> loadBalancerResponse;
 
+	//RES通常指的是ResponseData
 	private final RES clientResponse;
 
+	//C一般指的是Context
 	private final Request<C> loadBalancerRequest;
 
 	public CompletionContext(Status status, Request<C> loadBalancerRequest) {
@@ -46,17 +55,16 @@ public class CompletionContext<RES, T, C> {
 	}
 
 	public CompletionContext(Status status, Throwable throwable, Request<C> loadBalancerRequest,
-			Response<T> loadBalancerResponse) {
+	                         Response<T> loadBalancerResponse) {
 		this(status, throwable, loadBalancerRequest, loadBalancerResponse, null);
 	}
 
-	public CompletionContext(Status status, Request<C> loadBalancerRequest, Response<T> loadBalancerResponse,
-			RES clientResponse) {
+	public CompletionContext(Status status, Request<C> loadBalancerRequest, Response<T> loadBalancerResponse, RES clientResponse) {
 		this(status, null, loadBalancerRequest, loadBalancerResponse, clientResponse);
 	}
 
 	public CompletionContext(Status status, Throwable throwable, Request<C> loadBalancerRequest,
-			Response<T> loadBalancerResponse, RES clientResponse) {
+	                         Response<T> loadBalancerResponse, RES clientResponse) {
 		this.status = status;
 		this.throwable = throwable;
 		this.loadBalancerRequest = loadBalancerRequest;
@@ -99,11 +107,17 @@ public class CompletionContext<RES, T, C> {
 	 */
 	public enum Status {
 
-		/** Request was handled successfully. */
+		/**
+		 * Request was handled successfully.
+		 */
 		SUCCESS,
-		/** Request reached the server but failed due to timeout or internal error. */
+		/**
+		 * Request reached the server but failed due to timeout or internal error.
+		 */
 		FAILED,
-		/** Request did not go off box and should not be counted for statistics. */
+		/**
+		 * Request did not go off box and should not be counted for statistics.
+		 */
 		DISCARD,
 
 	}
