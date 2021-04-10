@@ -22,6 +22,7 @@ package org.springframework.cloud.client.loadbalancer;
  * @author Olga Maciaszek-Sharma
  * @since 3.0.0
  */
+//维护请求开始时间
 public interface TimedRequestContext {
 
 	long getRequestStartTime();

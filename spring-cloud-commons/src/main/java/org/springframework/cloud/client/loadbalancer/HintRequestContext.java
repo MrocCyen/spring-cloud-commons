@@ -25,6 +25,7 @@ import org.springframework.core.style.ToStringCreator;
  *
  * @author Olga Maciaszek-Sharma
  */
+//相比较TimedRequestContext，多维护了一个hint
 public class HintRequestContext implements TimedRequestContext {
 
 	/**
@@ -33,6 +34,9 @@ public class HintRequestContext implements TimedRequestContext {
 	 */
 	private String hint = "default";
 
+	/**
+	 * 请求开始时间
+	 */
 	private long requestStartTime;
 
 	public HintRequestContext() {

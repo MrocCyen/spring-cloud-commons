@@ -24,6 +24,7 @@ import org.springframework.http.HttpMethod;
  * @author Olga Maciaszek-Sharma
  * @since 3.0.0
  */
+//维护了客户端请求数据
 public class RequestDataContext extends DefaultRequestContext {
 
 	public RequestDataContext() {

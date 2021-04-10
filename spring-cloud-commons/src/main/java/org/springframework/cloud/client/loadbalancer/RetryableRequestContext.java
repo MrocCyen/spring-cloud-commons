@@ -27,21 +27,27 @@ import org.springframework.core.style.ToStringCreator;
  *
  * @author Olga Maciaszek-Sharma
  */
+//维护实例信息
 public class RetryableRequestContext extends RequestDataContext {
 
+	/**
+	 * 实例信息
+	 */
 	private ServiceInstance previousServiceInstance;
 
 	public RetryableRequestContext(ServiceInstance previousServiceInstance) {
 		this.previousServiceInstance = previousServiceInstance;
 	}
 
-	public RetryableRequestContext(ServiceInstance previousServiceInstance, RequestData clientRequestData) {
+	public RetryableRequestContext(ServiceInstance previousServiceInstance,
+	                               RequestData clientRequestData) {
 		super(clientRequestData);
 		this.previousServiceInstance = previousServiceInstance;
 	}
 
-	public RetryableRequestContext(ServiceInstance previousServiceInstance, RequestData clientRequestData,
-			String hint) {
+	public RetryableRequestContext(ServiceInstance previousServiceInstance,
+	                               RequestData clientRequestData,
+	                               String hint) {
 		super(clientRequestData, hint);
 		this.previousServiceInstance = previousServiceInstance;
 	}
