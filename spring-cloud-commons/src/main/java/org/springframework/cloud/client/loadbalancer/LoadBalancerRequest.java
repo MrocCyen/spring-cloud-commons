@@ -27,6 +27,13 @@ import org.springframework.cloud.client.ServiceInstance;
  */
 public interface LoadBalancerRequest<T> {
 
+	/**
+	 * 真正进行服务请求的入口
+	 *
+	 * @param instance 请求的服务实例
+	 * @return 请求结果
+	 * @throws Exception 异常信息
+	 */
 	T apply(ServiceInstance instance) throws Exception;
 
 }

@@ -54,13 +54,25 @@ import org.springframework.web.client.RestTemplate;
 @EnableConfigurationProperties(LoadBalancerProperties.class)
 public class LoadBalancerAutoConfiguration {
 
+	/**
+	 * 注入RestTemplate
+	 */
 	@LoadBalanced
 	@Autowired(required = false)
 	private List<RestTemplate> restTemplates = Collections.emptyList();
 
+	/**
+	 * 注入负载均衡转换器
+	 */
 	@Autowired(required = false)
 	private List<LoadBalancerRequestTransformer> transformers = Collections.emptyList();
 
+	/**
+	 * 针对每一个RestTemplate进行自定义处理
+	 *
+	 * @param restTemplateCustomizers 注入RestTemplate自定义处理器
+	 * @return SmartInitializingSingleton实现类
+	 */
 	@Bean
 	public SmartInitializingSingleton loadBalancedRestTemplateInitializerDeprecated(
 			final ObjectProvider<List<RestTemplateCustomizer>> restTemplateCustomizers) {
@@ -73,6 +85,12 @@ public class LoadBalancerAutoConfiguration {
 		});
 	}
 
+	/**
+	 * 注入请求工厂，用于创建LoadBalancerRequest进行http请求
+	 *
+	 * @param loadBalancerClient 注入负载均衡客户端
+	 * @return 请求工厂
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public LoadBalancerRequestFactory loadBalancerRequestFactory(LoadBalancerClient loadBalancerClient) {

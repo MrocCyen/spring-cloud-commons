@@ -28,16 +28,25 @@ import org.springframework.http.client.ClientHttpResponse;
  * to the intercepted {@link HttpRequest}.
  *
  * @author William Tran
- *
+ */
+
+/**
+ * 负载均衡请求工厂，用于创建LoadBalancerRequest
  */
 public class LoadBalancerRequestFactory {
 
+	/**
+	 * 负载均衡客户端
+	 */
 	private LoadBalancerClient loadBalancer;
 
+	/**
+	 * 负载均衡请求转换器
+	 */
 	private List<LoadBalancerRequestTransformer> transformers;
 
 	public LoadBalancerRequestFactory(LoadBalancerClient loadBalancer,
-			List<LoadBalancerRequestTransformer> transformers) {
+	                                  List<LoadBalancerRequestTransformer> transformers) {
 		this.loadBalancer = loadBalancer;
 		this.transformers = transformers;
 	}
@@ -46,15 +55,27 @@ public class LoadBalancerRequestFactory {
 		this.loadBalancer = loadBalancer;
 	}
 
-	public LoadBalancerRequest<ClientHttpResponse> createRequest(final HttpRequest request, final byte[] body,
-			final ClientHttpRequestExecution execution) {
+	/**
+	 * 创建LoadBalancerRequest
+	 *
+	 * @param request   http请求
+	 * @param body      请求体
+	 * @param execution 客户端http请求执行
+	 * @return LoadBalancerRequest
+	 */
+	public LoadBalancerRequest<ClientHttpResponse> createRequest(final HttpRequest request,
+	                                                             final byte[] body,
+	                                                             final ClientHttpRequestExecution execution) {
 		return instance -> {
+			//创建ServiceRequestWrapper，包装HttpRequest，ServiceInstance，LoadBalancerClient
 			HttpRequest serviceRequest = new ServiceRequestWrapper(request, instance, this.loadBalancer);
 			if (this.transformers != null) {
 				for (LoadBalancerRequestTransformer transformer : this.transformers) {
+					//进行请求转换
 					serviceRequest = transformer.transformRequest(serviceRequest, instance);
 				}
 			}
+			//执行获得ClientHttpResponse
 			return execution.execute(serviceRequest, body);
 		};
 	}

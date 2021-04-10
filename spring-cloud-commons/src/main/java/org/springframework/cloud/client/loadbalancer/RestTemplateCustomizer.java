@@ -21,6 +21,10 @@ import org.springframework.web.client.RestTemplate;
 /**
  * @author Spencer Gibb
  */
+
+/**
+ * RestTemplate自定义器
+ */
 public interface RestTemplateCustomizer {
 
 	void customize(RestTemplate restTemplate);

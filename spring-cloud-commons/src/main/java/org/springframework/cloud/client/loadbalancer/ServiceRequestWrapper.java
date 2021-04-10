@@ -27,8 +27,14 @@ import org.springframework.http.client.support.HttpRequestWrapper;
  */
 public class ServiceRequestWrapper extends HttpRequestWrapper {
 
+	/**
+	 * 服务实例
+	 */
 	private final ServiceInstance instance;
 
+	/**
+	 * LoadBalancerClient
+	 */
 	private final LoadBalancerClient loadBalancer;
 
 	public ServiceRequestWrapper(HttpRequest request, ServiceInstance instance, LoadBalancerClient loadBalancer) {

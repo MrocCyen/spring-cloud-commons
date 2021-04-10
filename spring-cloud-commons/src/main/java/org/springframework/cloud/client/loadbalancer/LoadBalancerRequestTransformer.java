@@ -34,6 +34,13 @@ public interface LoadBalancerRequestTransformer {
 	 */
 	int DEFAULT_ORDER = 0;
 
+	/**
+	 * 根据给定的服务实例转换请求
+	 *
+	 * @param request  原始请求
+	 * @param instance 服务实例
+	 * @return 转换后的实例
+	 */
 	HttpRequest transformRequest(HttpRequest request, ServiceInstance instance);
 
 }
