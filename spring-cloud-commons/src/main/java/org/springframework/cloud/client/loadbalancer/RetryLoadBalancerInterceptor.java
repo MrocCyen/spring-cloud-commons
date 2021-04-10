@@ -43,7 +43,7 @@ import org.springframework.util.StreamUtils;
  * @author Gang Li
  * @author Olga Maciaszek-Sharma
  */
-@SuppressWarnings({ "unchecked", "rawtypes" })
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class RetryLoadBalancerInterceptor implements ClientHttpRequestInterceptor {
 
 	private static final Log LOG = LogFactory.getLog(RetryLoadBalancerInterceptor.class);
@@ -58,9 +58,11 @@ public class RetryLoadBalancerInterceptor implements ClientHttpRequestIntercepto
 
 	private final ReactiveLoadBalancer.Factory<ServiceInstance> loadBalancerFactory;
 
-	public RetryLoadBalancerInterceptor(LoadBalancerClient loadBalancer, LoadBalancerProperties properties,
-			LoadBalancerRequestFactory requestFactory, LoadBalancedRetryFactory lbRetryFactory,
-			ReactiveLoadBalancer.Factory<ServiceInstance> loadBalancerFactory) {
+	public RetryLoadBalancerInterceptor(LoadBalancerClient loadBalancer,
+	                                    LoadBalancerProperties properties,
+	                                    LoadBalancerRequestFactory requestFactory,
+	                                    LoadBalancedRetryFactory lbRetryFactory,
+	                                    ReactiveLoadBalancer.Factory<ServiceInstance> loadBalancerFactory) {
 		this.loadBalancer = loadBalancer;
 		this.properties = properties;
 		this.requestFactory = requestFactory;
@@ -69,8 +71,9 @@ public class RetryLoadBalancerInterceptor implements ClientHttpRequestIntercepto
 	}
 
 	@Override
-	public ClientHttpResponse intercept(final HttpRequest request, final byte[] body,
-			final ClientHttpRequestExecution execution) throws IOException {
+	public ClientHttpResponse intercept(final HttpRequest request,
+	                                    final byte[] body,
+	                                    final ClientHttpRequestExecution execution) throws IOException {
 		final URI originalUri = request.getURI();
 		final String serviceName = originalUri.getHost();
 		Assert.state(serviceName != null, "Request URI does not contain a valid hostname: " + originalUri);
@@ -149,8 +152,9 @@ public class RetryLoadBalancerInterceptor implements ClientHttpRequestIntercepto
 		});
 	}
 
-	private RetryTemplate createRetryTemplate(String serviceName, HttpRequest request,
-			LoadBalancedRetryPolicy retryPolicy) {
+	private RetryTemplate createRetryTemplate(String serviceName,
+	                                          HttpRequest request,
+	                                          LoadBalancedRetryPolicy retryPolicy) {
 		RetryTemplate template = new RetryTemplate();
 		BackOffPolicy backOffPolicy = lbRetryFactory.createBackOffPolicy(serviceName);
 		template.setBackOffPolicy(backOffPolicy == null ? new NoBackOffPolicy() : backOffPolicy);

@@ -253,6 +253,7 @@ public class LoadBalancerProperties {
 
 		/**
 		 * Returns true if the load balancer should retry failed requests.
+		 *
 		 * @return True if the load balancer should retry failed requests; false
 		 * otherwise.
 		 */
@@ -262,6 +263,7 @@ public class LoadBalancerProperties {
 
 		/**
 		 * Sets whether the load balancer should retry failed requests.
+		 *
 		 * @param enabled Whether the load balancer should retry failed requests.
 		 */
 		public void setEnabled(boolean enabled) {

@@ -85,7 +85,7 @@ public class LoadBalancerAutoConfiguration {
 
 		@Bean
 		public LoadBalancerInterceptor loadBalancerInterceptor(LoadBalancerClient loadBalancerClient,
-				LoadBalancerRequestFactory requestFactory) {
+		                                                       LoadBalancerRequestFactory requestFactory) {
 			return new LoadBalancerInterceptor(loadBalancerClient, requestFactory);
 		}
 
@@ -147,9 +147,10 @@ public class LoadBalancerAutoConfiguration {
 		@Bean
 		@ConditionalOnMissingBean
 		public RetryLoadBalancerInterceptor loadBalancerInterceptor(LoadBalancerClient loadBalancerClient,
-				LoadBalancerProperties properties, LoadBalancerRequestFactory requestFactory,
-				LoadBalancedRetryFactory loadBalancedRetryFactory,
-				ReactiveLoadBalancer.Factory<ServiceInstance> loadBalancerFactory) {
+		                                                            LoadBalancerProperties properties,
+		                                                            LoadBalancerRequestFactory requestFactory,
+		                                                            LoadBalancedRetryFactory loadBalancedRetryFactory,
+		                                                            ReactiveLoadBalancer.Factory<ServiceInstance> loadBalancerFactory) {
 			return new RetryLoadBalancerInterceptor(loadBalancerClient, properties, requestFactory,
 					loadBalancedRetryFactory, loadBalancerFactory);
 		}

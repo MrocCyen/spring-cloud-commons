@@ -25,6 +25,7 @@ import org.springframework.cloud.client.ServiceInstance;
  * @author Olga Maciaszek-Sharma
  * @since 3.0.0
  */
+//T是结果，RC是上下文
 public class LoadBalancerRequestAdapter<T, RC> extends DefaultRequest<RC> implements LoadBalancerRequest<T> {
 
 	private final LoadBalancerRequest<T> delegate;

@@ -26,6 +26,7 @@ import org.springframework.core.style.ToStringCreator;
  * @author Spencer Gibb
  * @author Olga Maciaszek-Sharma
  */
+//Request的默认实现
 public class DefaultRequest<T> implements Request<T> {
 
 	private T context;

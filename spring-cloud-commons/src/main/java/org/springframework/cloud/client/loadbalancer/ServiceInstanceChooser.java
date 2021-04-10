@@ -25,10 +25,12 @@ import org.springframework.cloud.client.ServiceInstance;
  * @author Ryan Baxter
  * @author Olga Maciaszek-Sharma
  */
+//从多个服务实例中选择一个实例进行调用
 public interface ServiceInstanceChooser {
 
 	/**
 	 * Chooses a ServiceInstance from the LoadBalancer for the specified service.
+	 *
 	 * @param serviceId The service ID to look up the LoadBalancer.
 	 * @return A ServiceInstance that matches the serviceId.
 	 */
@@ -37,9 +39,10 @@ public interface ServiceInstanceChooser {
 	/**
 	 * Chooses a ServiceInstance from the LoadBalancer for the specified service and
 	 * LoadBalancer request.
+	 *
 	 * @param serviceId The service ID to look up the LoadBalancer.
-	 * @param request The request to pass on to the LoadBalancer
-	 * @param <T> The type of the request context.
+	 * @param request   The request to pass on to the LoadBalancer
+	 * @param <T>       The type of the request context.
 	 * @return A ServiceInstance that matches the serviceId.
 	 */
 	<T> ServiceInstance choose(String serviceId, Request<T> request);
