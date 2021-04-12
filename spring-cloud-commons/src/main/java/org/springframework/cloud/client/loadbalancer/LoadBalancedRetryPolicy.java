@@ -18,10 +18,11 @@ package org.springframework.cloud.client.loadbalancer;
 
 /**
  * Retry logic to use for the {@link LoadBalancerClient}.
- * 负载均衡的重试策略
  *
  * @author Ryan Baxter
  */
+//负载均衡的重试策略
+//todo 需要用户自己实现
 public interface LoadBalancedRetryPolicy {
 
 	/**

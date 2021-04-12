@@ -44,7 +44,8 @@ import org.springframework.util.StreamUtils;
  * @author Olga Maciaszek-Sharma
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-//重试请求拦截器
+//可以进行重试的请求拦截器，这里主要是因为对restTemplate设置了重试策略
+//一般重试拦截器是默认打开的
 public class RetryLoadBalancerInterceptor implements ClientHttpRequestInterceptor {
 
 	private static final Log LOG = LogFactory.getLog(RetryLoadBalancerInterceptor.class);

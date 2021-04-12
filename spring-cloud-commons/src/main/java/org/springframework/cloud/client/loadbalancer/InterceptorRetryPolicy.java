@@ -27,7 +27,9 @@ import org.springframework.retry.RetryPolicy;
  * @author Ryan Baxter
  * @author Olga Maciaszek-Sharma
  */
-//拦截请求失败时进行重试的策略
+//http请求的重试策略，这里类名改成RetryInterceptorPolicy更为贴切
+//用于RetryLoadBalancerInterceptor，拦截请求，设置restTemplate的重试策略
+//内部使用LoadBalancedRetryPolicy进行真正的处理
 public class InterceptorRetryPolicy implements RetryPolicy {
 
 	//http请求

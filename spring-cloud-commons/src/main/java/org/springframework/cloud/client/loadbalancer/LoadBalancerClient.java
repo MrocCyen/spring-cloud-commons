@@ -26,6 +26,9 @@ import org.springframework.cloud.client.ServiceInstance;
  *
  * @author Spencer Gibb
  */
+//封装负载均衡客户端请求执行
+//最终执行是交给LoadBalancerRequest来进行的
+//todo 用户需要实现
 public interface LoadBalancerClient extends ServiceInstanceChooser {
 
 	/**

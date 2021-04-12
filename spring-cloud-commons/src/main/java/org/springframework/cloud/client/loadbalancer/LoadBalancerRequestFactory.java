@@ -32,6 +32,7 @@ import org.springframework.http.client.ClientHttpResponse;
 
 /**
  * 负载均衡请求工厂，用于创建LoadBalancerRequest
+ * 会根据LoadBalancerRequestTransformer的实现类，进行请求的转换
  */
 public class LoadBalancerRequestFactory {
 

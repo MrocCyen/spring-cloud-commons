@@ -27,6 +27,7 @@ import org.springframework.util.Assert;
 
 /**
  * 拦截客户端请求，可以进行扩展操作
+ * 默认是关闭的
  *
  * @author Spencer Gibb
  * @author Dave Syer

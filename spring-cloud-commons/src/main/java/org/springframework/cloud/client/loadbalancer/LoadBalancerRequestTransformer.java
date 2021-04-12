@@ -26,6 +26,7 @@ import org.springframework.http.HttpRequest;
  *
  * @author Will Tran
  */
+//todo 用户需要实现
 @Order(LoadBalancerRequestTransformer.DEFAULT_ORDER)
 public interface LoadBalancerRequestTransformer {
 

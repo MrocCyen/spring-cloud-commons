@@ -25,6 +25,8 @@ import org.springframework.retry.backoff.NoBackOffPolicy;
  *
  * @author Ryan Baxter
  */
+//负载均衡的重试工厂
+//todo 需要用户自定进行实现，并注入到容器中
 public interface LoadBalancedRetryFactory {
 
 	/**

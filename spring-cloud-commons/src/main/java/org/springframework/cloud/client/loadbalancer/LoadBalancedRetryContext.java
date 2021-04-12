@@ -27,7 +27,8 @@ import org.springframework.retry.context.RetryContextSupport;
  * @author Ryan Baxter
  * @author Olga Maciaszek-Sharma
  */
-//负载均衡重试上下文
+//负载均衡重试上下文，封装了当前请求前一个和当前请求的服务实例
+//用于RetryLoadBalancerInterceptor
 public class LoadBalancedRetryContext extends RetryContextSupport {
 
 	private HttpRequest request;

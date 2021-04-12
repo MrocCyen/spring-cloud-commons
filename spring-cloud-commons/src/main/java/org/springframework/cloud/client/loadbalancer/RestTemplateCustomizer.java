@@ -25,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 /**
  * RestTemplate自定义器
  */
+//todo 用户需要实现
 public interface RestTemplateCustomizer {
 
 	void customize(RestTemplate restTemplate);
