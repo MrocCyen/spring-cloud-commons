@@ -29,17 +29,18 @@ public interface LoadBalancedRetryFactory {
 
 	/**
 	 * Creates a {@link LoadBalancedRetryPolicy}.
-	 * @param service The ID of the service to create the retry policy for.
+	 *
+	 * @param service                The ID of the service to create the retry policy for.
 	 * @param serviceInstanceChooser Used to get the next server from a load balancer.
 	 * @return A retry policy for the service.
 	 */
-	default LoadBalancedRetryPolicy createRetryPolicy(String service,
-			ServiceInstanceChooser serviceInstanceChooser) {
+	default LoadBalancedRetryPolicy createRetryPolicy(String service, ServiceInstanceChooser serviceInstanceChooser) {
 		return null;
 	}
 
 	/**
 	 * Creates an array of {@link RetryListener}s for a given service.
+	 *
 	 * @param service The service to create the {@link RetryListener}s for.
 	 * @return An array of {@link RetryListener}s.
 	 */
@@ -49,6 +50,7 @@ public interface LoadBalancedRetryFactory {
 
 	/**
 	 * Creates a {@link BackOffPolicy} for a given service.
+	 *
 	 * @param service The service to create the {@link BackOffPolicy} for.
 	 * @return The {@link BackOffPolicy}.
 	 */
