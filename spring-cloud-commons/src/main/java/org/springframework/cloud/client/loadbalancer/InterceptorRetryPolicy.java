@@ -38,30 +38,40 @@ public class InterceptorRetryPolicy implements RetryPolicy {
 
 	/**
 	 * Creates a new retry policy.
-	 * @param request The request that will be retried.
-	 * @param policy The retry policy from the load balancer.
+	 *
+	 * @param request                The request that will be retried.
+	 * @param policy                 The retry policy from the load balancer.
 	 * @param serviceInstanceChooser The load balancer client.
-	 * @param serviceName The name of the service.
+	 * @param serviceName            The name of the service.
 	 */
-	public InterceptorRetryPolicy(HttpRequest request, LoadBalancedRetryPolicy policy,
-			ServiceInstanceChooser serviceInstanceChooser, String serviceName) {
+	public InterceptorRetryPolicy(HttpRequest request,
+	                              LoadBalancedRetryPolicy policy,
+	                              ServiceInstanceChooser serviceInstanceChooser,
+	                              String serviceName) {
 		this.request = request;
 		this.policy = policy;
 		this.serviceInstanceChooser = serviceInstanceChooser;
 		this.serviceName = serviceName;
 	}
 
+	/**
+	 * RetryTemplate.execute()中会调用
+	 */
 	@Override
 	public boolean canRetry(RetryContext context) {
 		LoadBalancedRetryContext lbContext = (LoadBalancedRetryContext) context;
 		if (lbContext.getRetryCount() == 0 && lbContext.getServiceInstance() == null) {
 			// We haven't even tried to make the request yet so return true so we do
+			//todo 这里进行服务器选举
 			lbContext.setServiceInstance(serviceInstanceChooser.choose(serviceName));
 			return true;
 		}
 		return policy.canRetryNextServer(lbContext);
 	}
 
+	/**
+	 * 创建LoadBalancedRetryContext上下文，RetryTemplate.execute()中会调用
+	 */
 	@Override
 	public RetryContext open(RetryContext parent) {
 		return new LoadBalancedRetryContext(parent, request);
@@ -72,6 +82,9 @@ public class InterceptorRetryPolicy implements RetryPolicy {
 		policy.close((LoadBalancedRetryContext) context);
 	}
 
+	/**
+	 * RetryTemplate.execute()中会调用
+	 */
 	@Override
 	public void registerThrowable(RetryContext context, Throwable throwable) {
 		LoadBalancedRetryContext lbContext = (LoadBalancedRetryContext) context;

@@ -64,6 +64,9 @@ public class RetryLoadBalancerInterceptor implements ClientHttpRequestIntercepto
 
 	}
 
+	/**
+	 * 真正执行服务选举的地方，重要，todo
+	 */
 	@Override
 	public ClientHttpResponse intercept(final HttpRequest request,
 	                                    final byte[] body,
@@ -78,6 +81,12 @@ public class RetryLoadBalancerInterceptor implements ClientHttpRequestIntercepto
 		final LoadBalancedRetryPolicy retryPolicy = lbRetryFactory.createRetryPolicy(serviceName, loadBalancer);
 		//创建重试RetryTemplate
 		RetryTemplate template = createRetryTemplate(serviceName, request, retryPolicy);
+		//todo 这里很重要，扩展的地方很好
+		//1、LoadBalancedRetryContext保存当前请求的服务实例
+		//2、InterceptorRetryPolicy继承RetryPolicy，可以创建一个LoadBalancedRetryContext，封装并并且使用LoadBalancedRetryPolicy进行重试判断
+		//3、execute方法内部逻辑
+		//3.1、使用InterceptorRetryPolicy.open方法创建一个LoadBalancedRetryContext
+		//3.2、while循环中，使用InterceptorRetryPolicy.canRetry方法判断是否需要重试
 		return template.execute(context -> {
 			//从重试上下文中获取服务实例
 			ServiceInstance serviceInstance = null;
@@ -91,9 +100,8 @@ public class RetryLoadBalancerInterceptor implements ClientHttpRequestIntercepto
 			//如果重试上下文中没有服务实例
 			if (serviceInstance == null) {
 				if (LOG.isDebugEnabled()) {
-					LOG.debug(
-							"Service instance retrieved from LoadBalancedRetryContext: was null. "
-									+ "Reattempting service instance selection");
+					LOG.debug("Service instance retrieved from LoadBalancedRetryContext: was null. "
+							+ "Reattempting service instance selection");
 				}
 				//重新选择一个服务实例
 				serviceInstance = loadBalancer.choose(serviceName);
@@ -145,7 +153,7 @@ public class RetryLoadBalancerInterceptor implements ClientHttpRequestIntercepto
 		if (retryListeners != null && retryListeners.length != 0) {
 			template.setListeners(retryListeners);
 		}
-		//设置重试策略
+		//todo 重要，设置重试策略
 		template.setRetryPolicy(!lbProperties.isEnabled() || retryPolicy == null
 				? new NeverRetryPolicy()
 				: new InterceptorRetryPolicy(request, retryPolicy, loadBalancer, serviceName));
