@@ -36,6 +36,8 @@ import org.springframework.util.Assert;
 import org.springframework.util.StreamUtils;
 
 /**
+ * 这是基于resttemplete
+ *
  * @author Ryan Baxter
  * @author Will Tran
  * @author Gang Li
