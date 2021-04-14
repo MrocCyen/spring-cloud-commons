@@ -27,25 +27,34 @@ import java.util.function.Function;
  */
 public abstract class AbstractCircuitBreakerFactory<CONF, CONFB extends ConfigBuilder<CONF>> {
 
+	/**
+	 * 保存断路器配置信息，key是断路器id
+	 */
 	private final ConcurrentHashMap<String, CONF> configurations = new ConcurrentHashMap<>();
 
 	/**
 	 * Adds configurations for circuit breakers.
-	 * @param ids The id of the circuit breaker
+	 *
+	 * @param ids      The id of the circuit breaker，断路器的id列表
 	 * @param consumer A configuration builder consumer, allows consumers to customize the
-	 * builder before the configuration is built
+	 *                 builder before the configuration is built
 	 */
 	public void configure(Consumer<CONFB> consumer, String... ids) {
 		for (String id : ids) {
+			//获取配置信息构建器
 			CONFB builder = configBuilder(id);
+			//自定义处理配置信息构建器
 			consumer.accept(builder);
+			//创建配置信息
 			CONF conf = builder.build();
+			//保存每个断路器的id和各自的配置信息
 			getConfigurations().put(id, conf);
 		}
 	}
 
 	/**
 	 * Gets the configurations for the circuit breakers.
+	 *
 	 * @return The configurations
 	 */
 	protected ConcurrentHashMap<String, CONF> getConfigurations() {
@@ -54,6 +63,8 @@ public abstract class AbstractCircuitBreakerFactory<CONF, CONFB extends ConfigBu
 
 	/**
 	 * Creates a configuration builder for the given id.
+	 * 根据id获取这个id对应的断路器配置信息构建器
+	 *
 	 * @param id The id of the circuit breaker
 	 * @return The configuration builder
 	 */
@@ -61,6 +72,7 @@ public abstract class AbstractCircuitBreakerFactory<CONF, CONFB extends ConfigBu
 
 	/**
 	 * Sets the default configuration for circuit breakers.
+	 *
 	 * @param defaultConfiguration A function that returns the default configuration
 	 */
 	public abstract void configureDefault(Function<String, CONF> defaultConfiguration);

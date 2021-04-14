@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Import;
 /**
  * Annotation to enable a CircuitBreaker implementation.
  * https://martinfowler.com/bliki/CircuitBreaker.html
+ *
  * @author Spencer Gibb
  */
 @Target(ElementType.TYPE)

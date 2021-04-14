@@ -41,25 +41,29 @@ import org.springframework.util.Assert;
  * @author Spencer Gibb
  * @author Dave Syer
  */
-public abstract class SpringFactoryImportSelector<T>
-		implements DeferredImportSelector, BeanClassLoaderAware, EnvironmentAware {
+public abstract class SpringFactoryImportSelector<T> implements DeferredImportSelector, BeanClassLoaderAware, EnvironmentAware {
 
 	private final Log log = LogFactory.getLog(SpringFactoryImportSelector.class);
 
 	private ClassLoader beanClassLoader;
 
-	private Class<T> annotationClass;
+	/**
+	 * 注解类型
+	 */
+	private final Class<T> annotationClass;
 
 	private Environment environment;
 
 	@SuppressWarnings("unchecked")
 	protected SpringFactoryImportSelector() {
+		//获取注解类型
 		this.annotationClass = (Class<T>) GenericTypeResolver
 				.resolveTypeArgument(this.getClass(), SpringFactoryImportSelector.class);
 	}
 
 	@Override
 	public String[] selectImports(AnnotationMetadata metadata) {
+		//不能使用，直接返回空数组
 		if (!isEnabled()) {
 			return new String[0];
 		}
@@ -92,6 +96,9 @@ public abstract class SpringFactoryImportSelector<T>
 		return false;
 	}
 
+	/**
+	 * 子类实现
+	 */
 	protected abstract boolean isEnabled();
 
 	protected String getSimpleName() {

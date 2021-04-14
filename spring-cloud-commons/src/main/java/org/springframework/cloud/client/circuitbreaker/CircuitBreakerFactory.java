@@ -18,12 +18,18 @@ package org.springframework.cloud.client.circuitbreaker;
 
 /**
  * Creates circuit breakers based on the underlying implementation.
+ * <CONF> 断路器的配置信息类型
+ * <CONFB> 断路器配置信息创建器ConfigBuilder的实现类
+ * todo 需要用户实现
  *
  * @author Ryan Baxter
  */
 public abstract class CircuitBreakerFactory<CONF, CONFB extends ConfigBuilder<CONF>>
 		extends AbstractCircuitBreakerFactory<CONF, CONFB> {
 
+	/**
+	 * 根据断路器id创建一个断路器
+	 */
 	public abstract CircuitBreaker create(String id);
 
 }

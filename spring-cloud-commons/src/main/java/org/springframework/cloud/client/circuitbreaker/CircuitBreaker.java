@@ -21,6 +21,7 @@ import java.util.function.Supplier;
 
 /**
  * Spring Cloud circuit breaker.
+ * 断路器接口，todo 用户需要实现
  *
  * @author Ryan Baxter
  */
@@ -30,8 +31,16 @@ public interface CircuitBreaker {
 		return run(toRun, throwable -> {
 			throw new NoFallbackAvailableException("No fallback available.", throwable);
 		});
-	};
+	}
 
+	/**
+	 * 执行断路器逻辑
+	 *
+	 * @param toRun    获取结果
+	 * @param fallback 出现异常时用于回退，传入异常信息，然后返回结果
+	 * @param <T>      返回结果
+	 * @return T
+	 */
 	<T> T run(Supplier<T> toRun, Function<Throwable, T> fallback);
 
 }

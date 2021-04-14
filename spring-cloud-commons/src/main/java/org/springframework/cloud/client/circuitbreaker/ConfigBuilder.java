@@ -18,11 +18,17 @@ package org.springframework.cloud.client.circuitbreaker;
 
 /**
  * A builder for circuit breaker configurations.
+ * </p>
+ * 创建断路器的配置信息
+ * todo 需要用户实现
  *
  * @author Ryan Baxter
  */
 public interface ConfigBuilder<CONF> {
 
+	/**
+	 * 创建配置信息
+	 */
 	CONF build();
 
 }
