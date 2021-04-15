@@ -69,10 +69,8 @@ import org.springframework.util.StringUtils;
  * "application.properties".
  *
  * @author Dave Syer
- *
  */
-public class BootstrapApplicationListener
-		implements ApplicationListener<ApplicationEnvironmentPreparedEvent>, Ordered {
+public class BootstrapApplicationListener implements ApplicationListener<ApplicationEnvironmentPreparedEvent>, Ordered {
 
 	/**
 	 * Property source name for bootstrap.
@@ -94,8 +92,7 @@ public class BootstrapApplicationListener
 	@Override
 	public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
 		ConfigurableEnvironment environment = event.getEnvironment();
-		if (!environment.getProperty("spring.cloud.bootstrap.enabled", Boolean.class,
-				true)) {
+		if (!environment.getProperty("spring.cloud.bootstrap.enabled", Boolean.class, true)) {
 			return;
 		}
 		// don't listen to events in a bootstrap context
@@ -103,33 +100,25 @@ public class BootstrapApplicationListener
 			return;
 		}
 		ConfigurableApplicationContext context = null;
-		String configName = environment
-				.resolvePlaceholders("${spring.cloud.bootstrap.name:bootstrap}");
-		for (ApplicationContextInitializer<?> initializer : event.getSpringApplication()
-				.getInitializers()) {
+		String configName = environment.resolvePlaceholders("${spring.cloud.bootstrap.name:bootstrap}");
+		for (ApplicationContextInitializer<?> initializer : event.getSpringApplication().getInitializers()) {
 			if (initializer instanceof ParentContextApplicationContextInitializer) {
-				context = findBootstrapContext(
-						(ParentContextApplicationContextInitializer) initializer,
-						configName);
+				context = findBootstrapContext((ParentContextApplicationContextInitializer) initializer, configName);
 			}
 		}
 		if (context == null) {
-			context = bootstrapServiceContext(environment, event.getSpringApplication(),
-					configName);
-			event.getSpringApplication()
-					.addListeners(new CloseContextOnFailureApplicationListener(context));
+			context = bootstrapServiceContext(environment, event.getSpringApplication(), configName);
+			event.getSpringApplication().addListeners(new CloseContextOnFailureApplicationListener(context));
 		}
 
 		apply(context, event.getSpringApplication(), environment);
 	}
 
-	private ConfigurableApplicationContext findBootstrapContext(
-			ParentContextApplicationContextInitializer initializer, String configName) {
-		Field field = ReflectionUtils
-				.findField(ParentContextApplicationContextInitializer.class, "parent");
+	private ConfigurableApplicationContext findBootstrapContext(ParentContextApplicationContextInitializer initializer,
+	                                                            String configName) {
+		Field field = ReflectionUtils.findField(ParentContextApplicationContextInitializer.class, "parent");
 		ReflectionUtils.makeAccessible(field);
-		ConfigurableApplicationContext parent = safeCast(
-				ConfigurableApplicationContext.class,
+		ConfigurableApplicationContext parent = safeCast(ConfigurableApplicationContext.class,
 				ReflectionUtils.getField(field, initializer));
 		if (parent != null && !configName.equals(parent.getId())) {
 			parent = safeCast(ConfigurableApplicationContext.class, parent.getParent());
@@ -140,25 +129,22 @@ public class BootstrapApplicationListener
 	private <T> T safeCast(Class<T> type, Object object) {
 		try {
 			return type.cast(object);
-		}
-		catch (ClassCastException e) {
+		} catch (ClassCastException e) {
 			return null;
 		}
 	}
 
-	private ConfigurableApplicationContext bootstrapServiceContext(
-			ConfigurableEnvironment environment, final SpringApplication application,
-			String configName) {
+	private ConfigurableApplicationContext bootstrapServiceContext(ConfigurableEnvironment environment,
+	                                                               final SpringApplication application,
+	                                                               String configName) {
 		StandardEnvironment bootstrapEnvironment = new StandardEnvironment();
 		MutablePropertySources bootstrapProperties = bootstrapEnvironment
 				.getPropertySources();
 		for (PropertySource<?> source : bootstrapProperties) {
 			bootstrapProperties.remove(source.getName());
 		}
-		String configLocation = environment
-				.resolvePlaceholders("${spring.cloud.bootstrap.location:}");
-		String configAdditionalLocation = environment
-				.resolvePlaceholders("${spring.cloud.bootstrap.additional-location:}");
+		String configLocation = environment.resolvePlaceholders("${spring.cloud.bootstrap.location:}");
+		String configAdditionalLocation = environment.resolvePlaceholders("${spring.cloud.bootstrap.additional-location:}");
 		Map<String, Object> bootstrapMap = new HashMap<>();
 		bootstrapMap.put("spring.config.name", configName);
 		// if an app (or test) uses spring.main.web-application-type=reactive, bootstrap
@@ -171,11 +157,9 @@ public class BootstrapApplicationListener
 			bootstrapMap.put("spring.config.location", configLocation);
 		}
 		if (StringUtils.hasText(configAdditionalLocation)) {
-			bootstrapMap.put("spring.config.additional-location",
-					configAdditionalLocation);
+			bootstrapMap.put("spring.config.additional-location", configAdditionalLocation);
 		}
-		bootstrapProperties.addFirst(
-				new MapPropertySource(BOOTSTRAP_PROPERTY_SOURCE_NAME, bootstrapMap));
+		bootstrapProperties.addFirst(new MapPropertySource(BOOTSTRAP_PROPERTY_SOURCE_NAME, bootstrapMap));
 		for (PropertySource<?> source : environment.getPropertySources()) {
 			if (source instanceof StubPropertySource) {
 				continue;
@@ -205,10 +189,13 @@ public class BootstrapApplicationListener
 			// Environment, and there are some toxic listeners (like the
 			// LoggingApplicationListener) that affect global static state, so we need a
 			// way to switch those off.
-			builderApplication
-					.setListeners(filterListeners(builderApplication.getListeners()));
+			builderApplication.setListeners(filterListeners(builderApplication.getListeners()));
 		}
+
+		//todo 加载在spring.factories文件中配置了@BootstrapConfiguration注解的配置类
+		//todo 这些配置类用于构建启动上下文，这些bean会被注入到启动上下文中
 		builder.sources(BootstrapImportSelectorConfiguration.class);
+
 		final ConfigurableApplicationContext context = builder.run();
 		// gh-214 using spring.application.name=bootstrap to set the context id via
 		// `ContextIdApplicationContextInitializer` prevents apps from getting the actual
@@ -224,8 +211,7 @@ public class BootstrapApplicationListener
 		return context;
 	}
 
-	private Collection<? extends ApplicationListener<?>> filterListeners(
-			Set<ApplicationListener<?>> listeners) {
+	private Collection<? extends ApplicationListener<?>> filterListeners(Set<ApplicationListener<?>> listeners) {
 		Set<ApplicationListener<?>> result = new LinkedHashSet<>();
 		for (ApplicationListener<?> listener : listeners) {
 			if (!(listener instanceof LoggingApplicationListener)
@@ -237,14 +223,13 @@ public class BootstrapApplicationListener
 	}
 
 	private void mergeDefaultProperties(MutablePropertySources environment,
-			MutablePropertySources bootstrap) {
+	                                    MutablePropertySources bootstrap) {
 		String name = DEFAULT_PROPERTIES;
 		if (bootstrap.contains(name)) {
 			PropertySource<?> source = bootstrap.get(name);
 			if (!environment.contains(name)) {
 				environment.addLast(source);
-			}
-			else {
+			} else {
 				PropertySource<?> target = environment.get(name);
 				if (target instanceof MapPropertySource && target != source
 						&& source instanceof MapPropertySource) {
@@ -263,12 +248,12 @@ public class BootstrapApplicationListener
 	}
 
 	private void mergeAdditionalPropertySources(MutablePropertySources environment,
-			MutablePropertySources bootstrap) {
+	                                            MutablePropertySources bootstrap) {
 		PropertySource<?> defaultProperties = environment.get(DEFAULT_PROPERTIES);
 		ExtendedDefaultPropertySource result = defaultProperties instanceof ExtendedDefaultPropertySource
 				? (ExtendedDefaultPropertySource) defaultProperties
 				: new ExtendedDefaultPropertySource(DEFAULT_PROPERTIES,
-						defaultProperties);
+				defaultProperties);
 		for (PropertySource<?> source : bootstrap) {
 			if (!environment.contains(source.getName())) {
 				result.add(source);
@@ -282,20 +267,18 @@ public class BootstrapApplicationListener
 	}
 
 	private void addOrReplace(MutablePropertySources environment,
-			PropertySource<?> result) {
+	                          PropertySource<?> result) {
 		if (environment.contains(result.getName())) {
 			environment.replace(result.getName(), result);
-		}
-		else {
+		} else {
 			environment.addLast(result);
 		}
 	}
 
 	private void addAncestorInitializer(SpringApplication application,
-			ConfigurableApplicationContext context) {
+	                                    ConfigurableApplicationContext context) {
 		boolean installed = false;
-		for (ApplicationContextInitializer<?> initializer : application
-				.getInitializers()) {
+		for (ApplicationContextInitializer<?> initializer : application.getInitializers()) {
 			if (initializer instanceof AncestorInitializer) {
 				installed = true;
 				// New parent
@@ -310,16 +293,20 @@ public class BootstrapApplicationListener
 
 	@SuppressWarnings("unchecked")
 	private void apply(ConfigurableApplicationContext context,
-			SpringApplication application, ConfigurableEnvironment environment) {
+	                   SpringApplication application,
+	                   ConfigurableEnvironment environment) {
 		if (application.getAllSources().contains(BootstrapMarkerConfiguration.class)) {
 			return;
 		}
 		application.addPrimarySources(Arrays.asList(BootstrapMarkerConfiguration.class));
+
+		//todo 这里将启动上下文中的ApplicationContextInitializer赋值给main上下文
+		//todo 这里主要是PropertySourceBootstrapConfiguration，用于main上下文中加载外部属性，可能是远程的属性值
 		@SuppressWarnings("rawtypes")
 		Set target = new LinkedHashSet<>(application.getInitializers());
-		target.addAll(
-				getOrderedBeansOfType(context, ApplicationContextInitializer.class));
+		target.addAll(getOrderedBeansOfType(context, ApplicationContextInitializer.class));
 		application.setInitializers(target);
+
 		addBootstrapDecryptInitializer(application);
 	}
 
@@ -334,21 +321,18 @@ public class BootstrapApplicationListener
 				decrypter = new DelegatingEnvironmentDecryptApplicationInitializer(del);
 				initializers.add(ini);
 				initializers.add(decrypter);
-			}
-			else if (ini instanceof DelegatingEnvironmentDecryptApplicationInitializer) {
+			} else if (ini instanceof DelegatingEnvironmentDecryptApplicationInitializer) {
 				// do nothing
-			}
-			else {
+			} else {
 				initializers.add(ini);
 			}
 		}
-		ArrayList<ApplicationContextInitializer<?>> target = new ArrayList<ApplicationContextInitializer<?>>(
-				initializers);
+		ArrayList<ApplicationContextInitializer<?>> target = new ArrayList<ApplicationContextInitializer<?>>(initializers);
 		application.setInitializers(target);
 	}
 
 	private <T> List<T> getOrderedBeansOfType(ListableBeanFactory context,
-			Class<T> type) {
+	                                          Class<T> type) {
 		List<T> result = new ArrayList<T>();
 		for (String name : context.getBeanNamesForType(type)) {
 			result.add(context.getBean(name, type));

@@ -30,9 +30,10 @@ import org.springframework.core.env.PropertySource;
  * Strategy for locating (possibly remote) property sources for the Environment.
  * Implementations should not fail unless they intend to prevent the application from
  * starting.
+ * <p>
+ * todo 这个可以配置在注解了@BootstrapConfiguration的配置中，用@Bean注解声明为一个bean
  *
  * @author Dave Syer
- *
  */
 public interface PropertySourceLocator {
 
@@ -48,7 +49,7 @@ public interface PropertySourceLocator {
 	}
 
 	static Collection<PropertySource<?>> locateCollection(PropertySourceLocator locator,
-			Environment environment) {
+	                                                      Environment environment) {
 		PropertySource<?> propertySource = locator.locate(environment);
 		if (propertySource == null) {
 			return Collections.emptyList();
@@ -63,8 +64,7 @@ public interface PropertySourceLocator {
 				}
 			}
 			return filteredSources;
-		}
-		else {
+		} else {
 			return Arrays.asList(propertySource);
 		}
 	}
