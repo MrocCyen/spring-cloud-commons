@@ -71,7 +71,7 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 	}
 
 	protected AbstractAutoServiceRegistration(ServiceRegistry<R> serviceRegistry,
-			AutoServiceRegistrationProperties properties) {
+											  AutoServiceRegistrationProperties properties) {
 		this.serviceRegistry = serviceRegistry;
 		this.properties = properties;
 	}
@@ -128,12 +128,17 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 
 		// only initialize if nonSecurePort is greater than 0 and it isn't already running
 		// because of containerPortInitializer below
+		//没有启动
 		if (!this.running.get()) {
+			//在服务注册之前发布事件
 			this.context.publishEvent(new InstancePreRegisteredEvent(this, getRegistration()));
+			//注册服务
 			register();
+			//注册管理服务
 			if (shouldRegisterManagement()) {
 				registerManagement();
 			}
+			//发布服务注册事件
 			this.context.publishEvent(new InstanceRegisteredEvent<>(this, getConfiguration()));
 			this.running.compareAndSet(false, true);
 		}
@@ -198,6 +203,7 @@ public abstract class AbstractAutoServiceRegistration<R extends Registration>
 
 	@PreDestroy
 	public void destroy() {
+		//销毁之前调用
 		stop();
 	}
 
